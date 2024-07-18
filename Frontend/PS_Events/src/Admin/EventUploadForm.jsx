@@ -29,6 +29,7 @@ function EventUploadForm() {
     const [eventMode, setEventMode] = useState("");
     const [eventImage, setEventImage] = useState(null);
     const [imageError, setImageError] = useState("");
+   
 
     const handleCheckboxChange = (department) => {
         setSelectedDepartments(prevState => 
@@ -108,6 +109,8 @@ function EventUploadForm() {
     };
 
     return (
+        <>
+            <h1>Upload Event Details</h1>
         <div className='eventUploadForm'>
             <form className='uploadform' onSubmit={handleSubmit}>
                 <label>
@@ -129,24 +132,7 @@ function EventUploadForm() {
                         onChange={(e) => setDescription(e.target.value)}
                     />
                 </label>
-                <label>
-                    <p>Event Notice:</p>
-                    <input
-                        className='box'
-                        type='file'
-                        onChange={(e) => setEventNotice(e.target.files[0])}
-                    />
-                </label>
-                <label>
-                    <p>Event Image:</p>
-                    <input
-                        className='box'
-                        type='file'
-                        accept=".jpg, .jpeg, .png"
-                        onChange={handleImageChange}  
-                    />
-                    {imageError && <p className="error" style={{color: "red"}}>{imageError}</p>}
-                </label>
+                <div className='event-dates'>
                 <label>
                     <p>Event Start Date:</p>
                     <DatePicker
@@ -173,6 +159,8 @@ function EventUploadForm() {
                         placeholderText="MM/DD/YYYY"
                     />
                 </label>
+                </div>
+                <div className='register-dates'>
                 <label>
                     <p>Registration Start Date:</p>
                     <DatePicker
@@ -199,6 +187,50 @@ function EventUploadForm() {
                         placeholderText="MM/DD/YYYY"
                     />
                 </label>
+                </div>
+                <label >
+                    <p>Team Size:</p>
+                    <select
+                        value={teamSize}
+                        onChange={(e) => setTeamSize(e.target.value)}
+                        className={teamSize === '' ? 'gray-text' : ''}
+                    >
+                        <option value="" disabled hidden>Select Team Size</option>
+                        <option value="1" >1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </label>
+                <label>
+                    <p>Event Notice:</p>
+                    <input
+                        className='box'
+                        type='file'
+                        onChange={(e) => setEventNotice(e.target.files[0])}
+                    />
+                </label>
+                <label>
+                    <p>Event Image:</p>
+                    <input
+                        className='box'
+                        type='file'
+                        accept=".jpg, .jpeg, .png"
+                        onChange={handleImageChange}  
+                    />
+                    {imageError && <p className="error" style={{color: "red"}}>{imageError}</p>}
+                </label>
+                <label>
+                    <p>Event Website Link:</p>
+                    <input
+                        className='box'
+                        type='text'
+                        placeholder='Enter Event Link'
+                        value={eventLink}
+                        onChange={(e) => setEventLink(e.target.value)}
+                    />
+                </label>
                 <div className='radio-group'>
                     <p>Select Event Mode:</p>
                     <label>
@@ -220,6 +252,7 @@ function EventUploadForm() {
                         Offline
                     </label>
                 </div>
+                
                 <div className='checkbox-group'>
                     <p>Select Departments:</p>
                     {departments.map((department, index) => (
@@ -234,33 +267,11 @@ function EventUploadForm() {
                         </label>
                     ))}
                 </div>
-                <label >
-                    <p>Team Size:</p>
-                    <select
-                        value={teamSize}
-                        onChange={(e) => setTeamSize(e.target.value)}
-                    >
-                        <option value="" >Select Team Size</option>
-                        <option value="1" >1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-                </label>
-                <label>
-                    <p>Event Website Link:</p>
-                    <input
-                        className='box'
-                        type='text'
-                        placeholder='Enter Event Link'
-                        value={eventLink}
-                        onChange={(e) => setEventLink(e.target.value)}
-                    />
-                </label>
+                
                 <button type='submit'>Submit</button>
             </form>
         </div>
+        </>
     );
 }
 

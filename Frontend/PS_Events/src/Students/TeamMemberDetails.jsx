@@ -58,8 +58,9 @@ const TeamMemberDetails = ({ formData, setFormData }) => {
   };
 
   return (
-    <div className="team-member-form">
+    <>
       <h2>Team Member {memberIndex} Details</h2>
+    <div className="team-member-form">
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Member Name:</label>
@@ -121,10 +122,11 @@ const TeamMemberDetails = ({ formData, setFormData }) => {
           />
         </div>
 
-        <button type="button" onClick={handleBack}>Back</button>
+        <button type="button" style={{ backgroundColor: 'gray' }}onClick={handleBack}>Back</button>
         <button type="submit">Next</button>
       </form>
     </div>
+    </>
   );
 };
 

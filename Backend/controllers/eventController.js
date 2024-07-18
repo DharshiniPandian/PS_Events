@@ -1,4 +1,4 @@
-import { createEvent, getAllEvents, getEventById, updateEventById, getEventsByDepartmentFromModel, getTeamsForEvent, getTeamDetails,approveTeamInModel, rejectTeamInModel, getMemberId,storeReward } from '../models/eventModel.js';
+import { createEvent, getAllEvents, getEventById, updateEventById, getEventsByDepartmentFromModel, getTeamsForEvent, getTeamDetails,approveTeamInModel, rejectTeamInModel, getMemberId,storeReward,checkEventRegistration ,checkTeamMembership} from '../models/eventModel.js';
 import { getStudentByEmail } from '../models/studentModel.js';
 import multer from 'multer';
 import path from 'path';
@@ -102,37 +102,72 @@ export const updateEvent = (req, res) => {
 
 export const getStudentEvents = (req, res) => {
     const { email } = req.query;
-
+  
     if (!email) {
-        return res.status(400).json({ error: 'Email is required' });
+      return res.status(400).json({ error: 'Email is required' });
     }
-
+  
     getStudentByEmail(email, (err, studentResults) => {
+      if (err) {
+        console.error('Error retrieving student data:', err);
+        return res.status(500).json({ error: 'Failed to retrieve student data' });
+      }
+  
+      if (studentResults.length === 0) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+  
+      const studentData = studentResults[0];
+      const department = studentData.department;
+  
+      getEventsByDepartmentFromModel(department, (err, eventsResults) => {
         if (err) {
-            console.error('Error retrieving student data:', err);
-            return res.status(500).json({ error: 'Failed to retrieve student data' });
+          console.error('Error retrieving events by department:', err);
+          return res.status(500).json({ error: 'Failed to retrieve events' });
         }
-
-        if (studentResults.length === 0) {
-            return res.status(404).json({ error: 'Student not found' });
-        }
-
-        const studentData = studentResults[0];
-        const department = studentData.department;
-
-        getEventsByDepartmentFromModel(department, (err, eventsResults) => {
-            if (err) {
-                console.error('Error retrieving events by department:', err);
-                return res.status(500).json({ error: 'Failed to retrieve events' });
-            }
-
-            res.status(200).json({
-                department,
-                events: eventsResults
+  
+        const filteredEvents = [];
+  
+        const checkRegistrationsAndMemberships = (index) => {
+          if (index >= eventsResults.length) {
+            return res.status(200).json({
+              department,
+              events: filteredEvents
             });
-        });
+          }
+  
+          const event = eventsResults[index];
+  
+          checkEventRegistration(event.name, (err, isRegistered) => {
+            if (err) {
+              console.error('Error checking event registration:', err);
+              return res.status(500).json({ error: 'Failed to check event registration' });
+            }
+  
+            if (isRegistered) {
+              return checkRegistrationsAndMemberships(index + 1);
+            }
+  
+            checkTeamMembership(email, event.id, (err, isTeamMember) => {
+              if (err) {
+                console.error('Error checking team membership:', err);
+                return res.status(500).json({ error: 'Failed to check team membership' });
+              }
+  
+              if (!isTeamMember) {
+                filteredEvents.push(event);
+              }
+  
+              checkRegistrationsAndMemberships(index + 1);
+            });
+          });
+        };
+  
+        checkRegistrationsAndMemberships(0);
+      });
     });
-};
+  };
+  
 
 export const fetchTeamsForEvent = (req, res) => {
     const { eventName } = req.params;

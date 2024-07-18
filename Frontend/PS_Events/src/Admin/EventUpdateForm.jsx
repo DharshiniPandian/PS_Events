@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import './EventUpdateForm.css';
 
 const departments = [
     'Agriculture Engineering', 'Artificial Intelligence and Data Science', 'Artificial Intelligence and Machine Learning',
@@ -130,9 +131,10 @@ const EventUpdateForm = () => {
     };
 
     return (
-        <div className="event-update-form">
-            <h1>Update Event</h1>
-            <form onSubmit={handleSubmit}>
+        <>
+        <h1>Update Event</h1>
+        <div className="eventUpdateForm">
+            <form className="updateform"onSubmit={handleSubmit}>
                 <label>
                     Name:
                     <input
@@ -145,14 +147,17 @@ const EventUpdateForm = () => {
                 <label>
                     Description:
                     <textarea
+                        className='para'
                         name="description"
                         value={event.description}
                         onChange={handleChange}
                     />
                 </label>
+                <div className="event-dates">
                 <label>
                     Event Start Date:
                     <DatePicker
+                        className='box'
                         selected={event.eventStartDate}
                         onChange={(date) => handleDateChange('eventStartDate', date)}
                         dateFormat="yyyy-MM-dd"
@@ -165,6 +170,7 @@ const EventUpdateForm = () => {
                 <label>
                     Event End Date:
                     <DatePicker
+                        className='box'
                         selected={event.eventEndDate}
                         onChange={(date) => handleDateChange('eventEndDate', date)}
                         dateFormat="yyyy-MM-dd"
@@ -174,9 +180,12 @@ const EventUpdateForm = () => {
                         placeholderText="MM/DD/YYYY"
                     />
                 </label>
+                </div>
+                <div className="register-dates">
                 <label>
                     Registration Start Date:
                     <DatePicker
+                        className='box'
                         selected={event.registrationStartDate}
                         onChange={(date) => handleDateChange('registrationStartDate', date)}
                         dateFormat="yyyy-MM-dd"
@@ -189,6 +198,7 @@ const EventUpdateForm = () => {
                 <label>
                     Registration End Date:
                     <DatePicker
+                        className='box'
                         selected={event.registrationEndDate}
                         onChange={(date) => handleDateChange('registrationEndDate', date)}
                         dateFormat="yyyy-MM-dd"
@@ -198,6 +208,51 @@ const EventUpdateForm = () => {
                         placeholderText="MM/DD/YYYY"
                     />
                 </label>
+                </div>
+                <label>
+                    Team Size:
+                    <select
+                        value={event.teamSize}
+                        onChange={(e) => setEvent(prevEvent => ({ ...prevEvent, teamSize: e.target.value }))}
+                    >
+                        <option value="" disabled hidden>Select Team Size</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </label>
+                <label>
+                    Event Notice:
+                    <input
+                        type="file"
+                        name="eventNotice"
+                        onChange={handleFileChange}
+                    />
+                    {eventNoticeName && <p>Selected file: {eventNoticeName}</p>}
+                </label>
+                <label>
+                    Event Image:
+                    <input
+                        type="file"
+                        name="eventImage"
+                        accept=".jpg, .jpeg, .png"
+                        onChange={handleFileChange}
+                    />
+                    {eventImageName && <p>Selected file: {eventImageName}</p>}
+                    {imageError && <p className="error" style={{ color: "red" }}>{imageError}</p>}
+                </label>
+                <label>
+                    Event Link:
+                    <input
+                        type="url"
+                        name="eventLink"
+                        value={event.eventLink}
+                        onChange={handleChange}
+                    />
+                </label>
+
                 <div className="radio-group">
                     <p>Select Event Mode:</p>
                     <label>
@@ -233,52 +288,10 @@ const EventUpdateForm = () => {
                         </label>
                     ))}
                 </div>
-                <label>
-                    Team Size:
-                    <select
-                        value={event.teamSize}
-                        onChange={(e) => setEvent(prevEvent => ({ ...prevEvent, teamSize: e.target.value }))}
-                    >
-                        <option value="">Select Team Size</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-                </label>
-                <label>
-                    Event Link:
-                    <input
-                        type="url"
-                        name="eventLink"
-                        value={event.eventLink}
-                        onChange={handleChange}
-                    />
-                </label>
-                <label>
-                    Event Image:
-                    <input
-                        type="file"
-                        name="eventImage"
-                        accept=".jpg, .jpeg, .png"
-                        onChange={handleFileChange}
-                    />
-                    {eventImageName && <p>Selected file: {eventImageName}</p>}
-                    {imageError && <p className="error" style={{ color: "red" }}>{imageError}</p>}
-                </label>
-                <label>
-                    Event Notice:
-                    <input
-                        type="file"
-                        name="eventNotice"
-                        onChange={handleFileChange}
-                    />
-                    {eventNoticeName && <p>Selected file: {eventNoticeName}</p>}
-                </label>
                 <button type="submit">Update Event</button>
             </form>
         </div>
+    </>
     );
 };
 

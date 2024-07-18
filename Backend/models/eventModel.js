@@ -46,7 +46,7 @@ export const updateEventById = (id, eventData, callback) => {
 };
 
 export const getEventsByDepartmentFromModel = (department, callback) => {
-  const sql = 'SELECT id,name, eventImage FROM events WHERE FIND_IN_SET(?, departments)';
+  const sql = 'SELECT id, name, eventImage FROM events WHERE FIND_IN_SET(?, departments)';
 
   db.query(sql, [department], (err, results) => {
     if (err) {
@@ -56,6 +56,37 @@ export const getEventsByDepartmentFromModel = (department, callback) => {
     callback(null, results);
   });
 };
+
+export const checkEventRegistration = (eventName, callback) => {
+  if (typeof eventName !== 'string') {
+    return callback(new Error('Invalid input types'));
+  }
+
+  const sql = 'SELECT * FROM event_registration WHERE eventName = ?';
+  db.query(sql, [eventName], (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      return callback(err);
+    }
+    callback(null, results.length > 0);
+  });
+};
+
+export const checkTeamMembership = (email, eventid, callback) => {
+  if (typeof email !== 'string' || typeof eventid !== 'number') {
+    return callback(new Error('Invalid input types'));
+  }
+
+  const sql = 'SELECT * FROM team_members WHERE email = ? AND eventId = ?';
+  db.query(sql, [email, eventid], (err, results) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      return callback(err);
+    }
+    callback(null, results.length > 0);
+  });
+};
+
 
 export const getTeamsForEvent = (eventName, callback) => {
   const sql = 'SELECT * FROM event_registration WHERE eventName = ? AND level1 = 0 AND rejected IS NULL';

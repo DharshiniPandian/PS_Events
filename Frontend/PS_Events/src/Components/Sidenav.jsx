@@ -35,6 +35,16 @@ function Sidenav({ isOpen, role, handleLogout }) {
                     </NavLink>
                 </div>
             }
+            {role === 'student' &&
+                <div className="link">
+                    <NavLink to="/registeredevents" className={({ isActive }) => isActive ? "active" : ""}>
+                        <div className="box">
+                            <HiOutlineDocumentReport className="icon" size={24} />
+                            <p>Registered Events</p>
+                        </div>
+                    </NavLink>
+                </div>
+            }
             <div className="link">
                 <div className="box" onClick={handleLogout}>
                     <MdEventNote className="icon" size={24} />
