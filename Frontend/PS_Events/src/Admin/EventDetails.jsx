@@ -75,9 +75,10 @@ const EventDetails = () => {
       <h3>Registration End Date:</h3><p> {formatDate(event.registrationEndDate)}</p>
       <h3 >Departments: </h3><p>{departments}</p>
       <h3>Team Size:</h3> <p>{event.teamSize}</p>
+      <h3>Eligible years: </h3><p>{event.eligibleYears}</p>
       <h3>Event Mode: </h3><p>{event.eventMode}</p>
       <h3>Event Link:<br></br><br></br><a href={event.eventLink} target="_blank" rel="noopener noreferrer">{event.eventLink}</a></h3>
-      {noticeUrl && <h3>Event Notice:<br></br><br></br><a href={noticeUrl} target="_blank" rel="noopener noreferrer">Download</a></h3>}
+      {noticeUrl && <h3>Event Notice:<br></br><br></br><a href={noticeUrl} target="_blank" rel="noopener noreferrer">Open</a></h3>}
       {imageUrl && <h3>Event Image:<br></br><br></br><img src={imageUrl} alt={event.name} className="event-image" /></h3>}
 
       <div className="button-1">

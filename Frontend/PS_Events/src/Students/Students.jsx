@@ -23,6 +23,7 @@ function Students() {
                 const response = await axios.get('http://localhost:8081/events/student-events', {
                     params: { email: user.email }
                 });
+                console.log(response.data);
                 const { department, events } = response.data;
                 setDepartment(department);
                 setEvents(events);

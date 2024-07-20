@@ -1,0 +1,29 @@
+.registered-events {
+    padding: 20px;
+  }
+  
+  .events-list {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .event-card {
+    margin: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    width: 200px;
+  }
+  
+  .event-image {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+  }
+  
+  .event-name {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  

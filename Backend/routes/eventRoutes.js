@@ -1,5 +1,5 @@
 import express from 'express';
-import { uploadEventFiles, handleEventUpload, getEvent, getEvents, updateEvent,  getStudentEvents ,fetchTeamsForEvent,fetchTeamDetails ,approveTeam, rejectTeam, storeRewards} from '../controllers/eventController.js';
+import { uploadEventFiles, handleEventUpload, getEvent, getEvents, updateEvent,  getStudentEvents ,fetchTeamsForEvent,fetchTeamDetails ,approveTeam, rejectTeam, storeRewards,fetchTestTitlesByYear,getTeamSize,getEligibleYear} from '../controllers/eventController.js';
 //import { fetchTeamsForEvent } from '../controllers/registrationController.js';
 // import { getStudentDepartment } from '../controllers/studentController.js';
 
@@ -21,6 +21,11 @@ router.get('/:eventId/teams/:teamName', fetchTeamDetails);
 router.put('/:eventId/teams/:teamName/approve', approveTeam);
 router.put('/:eventId/teams/:teamName/reject', rejectTeam);
 router.post('/rewards', storeRewards);
+router.get('/testTitles/:year', fetchTestTitlesByYear);
+router.get('/teamSize/:eventName', getTeamSize);
+router.get('/getEligibleYear/:eventName',getEligibleYear);
+// GET request to fetch levels by year
+
 
 
 

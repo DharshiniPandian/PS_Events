@@ -13,6 +13,8 @@ const departments = [
     'Department 17'
 ];
 
+const years = ['1', '2', '3', '4'];
+
 const EventUpdateForm = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -24,6 +26,7 @@ const EventUpdateForm = () => {
         registrationStartDate: null,
         registrationEndDate: null,
         departments: [],
+        eligibleYears: [],
         teamSize: '',
         eventMode: '',
         eventLink: '',
@@ -56,7 +59,6 @@ const EventUpdateForm = () => {
             console.error('Error fetching event details:', error);
         }
     };
-    
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -76,35 +78,40 @@ const EventUpdateForm = () => {
 
     const handleDateChange = (name, date) => {
         setEvent(prevEvent => ({ ...prevEvent, [name]: date ? new Date(date) : null }));
-    };    
+    };
 
-    const handleCheckboxChange = (department) => {
-        setEvent(prevEvent => ({
-            ...prevEvent,
-            departments: prevEvent.departments.includes(department)
-                ? prevEvent.departments.filter(dep => dep !== department)
-                : [...prevEvent.departments, department]
-        }));
+    const handleCheckboxChange = (field, value) => {
+        setEvent(prevEvent => {
+            const fieldArray = Array.isArray(prevEvent[field]) ? prevEvent[field] : [];
+            return {
+                ...prevEvent,
+                [field]: fieldArray.includes(value)
+                    ? fieldArray.filter(item => item !== value)
+                    : [...fieldArray, value]
+            };
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         const formattedEvent = {
             ...event,
             eventStartDate: event.eventStartDate ? event.eventStartDate.toISOString().split('T')[0] : '',
             eventEndDate: event.eventEndDate ? event.eventEndDate.toISOString().split('T')[0] : '',
             registrationStartDate: event.registrationStartDate ? event.registrationStartDate.toISOString().split('T')[0] : '',
             registrationEndDate: event.registrationEndDate ? event.registrationEndDate.toISOString().split('T')[0] : '',
+            departments: event.departments.join(','),
+            eligibleYears: event.eligibleYears.join(',')
         };
-    
+
         const formData = new FormData();
         for (const key in formattedEvent) {
             formData.append(key, formattedEvent[key]);
         }
         if (eventImage) formData.append('eventImage', eventImage);
         if (eventNotice) formData.append('eventNotice', eventNotice);
-    
+
         try {
             await axios.put(`http://localhost:8081/events/${id}`, formData, {
                 headers: {
@@ -116,7 +123,6 @@ const EventUpdateForm = () => {
             console.error('Error updating event:', error);
         }
     };
-    
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -132,128 +138,118 @@ const EventUpdateForm = () => {
 
     return (
         <>
-        <h1>Update Event</h1>
-        <div className="eventUpdateForm">
-            <form className="updateform"onSubmit={handleSubmit}>
-                <label>
-                    Name:
-                    <input
-                        type="text"
-                        name="name"
-                        value={event.name}
-                        onChange={handleChange}
-                    />
-                </label>
-                <label>
-                    Description:
-                    <textarea
-                        className='para'
-                        name="description"
-                        value={event.description}
-                        onChange={handleChange}
-                    />
-                </label>
-                <div className="event-dates">
-                <label>
-                    Event Start Date:
-                    <DatePicker
-                        className='box'
-                        selected={event.eventStartDate}
-                        onChange={(date) => handleDateChange('eventStartDate', date)}
-                        dateFormat="yyyy-MM-dd"
-                        showMonthDropdown
-                        showYearDropdown
-                        dropdownMode="select"
-                        placeholderText="MM/DD/YYYY"
-                    />
-                </label>
-                <label>
-                    Event End Date:
-                    <DatePicker
-                        className='box'
-                        selected={event.eventEndDate}
-                        onChange={(date) => handleDateChange('eventEndDate', date)}
-                        dateFormat="yyyy-MM-dd"
-                        showMonthDropdown
-                        showYearDropdown
-                        dropdownMode="select"
-                        placeholderText="MM/DD/YYYY"
-                    />
-                </label>
-                </div>
-                <div className="register-dates">
-                <label>
-                    Registration Start Date:
-                    <DatePicker
-                        className='box'
-                        selected={event.registrationStartDate}
-                        onChange={(date) => handleDateChange('registrationStartDate', date)}
-                        dateFormat="yyyy-MM-dd"
-                        showMonthDropdown
-                        showYearDropdown
-                        dropdownMode="select"
-                        placeholderText="MM/DD/YYYY"
-                    />
-                </label>
-                <label>
-                    Registration End Date:
-                    <DatePicker
-                        className='box'
-                        selected={event.registrationEndDate}
-                        onChange={(date) => handleDateChange('registrationEndDate', date)}
-                        dateFormat="yyyy-MM-dd"
-                        showMonthDropdown
-                        showYearDropdown
-                        dropdownMode="select"
-                        placeholderText="MM/DD/YYYY"
-                    />
-                </label>
-                </div>
-                <label>
-                    Team Size:
-                    <select
-                        value={event.teamSize}
-                        onChange={(e) => setEvent(prevEvent => ({ ...prevEvent, teamSize: e.target.value }))}
-                    >
-                        <option value="" disabled hidden>Select Team Size</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                    </select>
-                </label>
-                <label>
-                    Event Notice:
-                    <input
-                        type="file"
-                        name="eventNotice"
-                        onChange={handleFileChange}
-                    />
-                    {eventNoticeName && <p>Selected file: {eventNoticeName}</p>}
-                </label>
-                <label>
-                    Event Image:
-                    <input
-                        type="file"
-                        name="eventImage"
-                        accept=".jpg, .jpeg, .png"
-                        onChange={handleFileChange}
-                    />
-                    {eventImageName && <p>Selected file: {eventImageName}</p>}
-                    {imageError && <p className="error" style={{ color: "red" }}>{imageError}</p>}
-                </label>
-                <label>
-                    Event Link:
-                    <input
-                        type="url"
-                        name="eventLink"
-                        value={event.eventLink}
-                        onChange={handleChange}
-                    />
-                </label>
-
-                <div className="radio-group">
+            <h1>Update Event</h1>
+            <div className="eventUpdateForm">
+                <form className="updateform" onSubmit={handleSubmit}>
+                    <label>
+                        Name:
+                        <input
+                            type="text"
+                            name="name"
+                            value={event.name}
+                            onChange={handleChange}
+                        />
+                    </label>
+                    <label>
+                        Description:
+                        <textarea
+                            className='para'
+                            name="description"
+                            value={event.description}
+                            onChange={handleChange}
+                        />
+                    </label>
+                    <div className="event-dates">
+                        <label>
+                            Event Start Date:
+                            <DatePicker
+                                className='box'
+                                selected={event.eventStartDate}
+                                onChange={(date) => handleDateChange('eventStartDate', date)}
+                                dateFormat="yyyy-MM-dd"
+                                showMonthDropdown
+                                showYearDropdown
+                                dropdownMode="select"
+                                placeholderText="MM/DD/YYYY"
+                            />
+                        </label>
+                        <label>
+                            Event End Date:
+                            <DatePicker
+                                className='box'
+                                selected={event.eventEndDate}
+                                onChange={(date) => handleDateChange('eventEndDate', date)}
+                                dateFormat="yyyy-MM-dd"
+                                showMonthDropdown
+                                showYearDropdown
+                                dropdownMode="select"
+                                placeholderText="MM/DD/YYYY"
+                            />
+                        </label>
+                    </div>
+                    <div className="register-dates">
+                        <label>
+                            Registration Start Date:
+                            <DatePicker
+                                className='box'
+                                selected={event.registrationStartDate}
+                                onChange={(date) => handleDateChange('registrationStartDate', date)}
+                                dateFormat="yyyy-MM-dd"
+                                showMonthDropdown
+                                showYearDropdown
+                                dropdownMode="select"
+                                placeholderText="MM/DD/YYYY"
+                            />
+                        </label>
+                        <label>
+                            Registration End Date:
+                            <DatePicker
+                                className='box'
+                                selected={event.registrationEndDate}
+                                onChange={(date) => handleDateChange('registrationEndDate', date)}
+                                dateFormat="yyyy-MM-dd"
+                                showMonthDropdown
+                                showYearDropdown
+                                dropdownMode="select"
+                                placeholderText="MM/DD/YYYY"
+                            />
+                        </label>
+                    </div>
+                    <label>
+                        Team Size:
+                        <select
+                            value={event.teamSize}
+                            onChange={(e) => setEvent(prevEvent => ({ ...prevEvent, teamSize: e.target.value }))}
+                        >
+                            <option value="" disabled hidden>Select Team Size</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </label>
+                    <label>
+                        Event Notice:
+                        <input
+                            type="file"
+                            name="eventNotice"
+                            onChange={handleFileChange}
+                        />
+                        {eventNoticeName && <p>Selected file: {eventNoticeName}</p>}
+                    </label>
+                    <label>
+                        Event Image:
+                        <input
+                            type="file"
+                            name="eventImage"
+                            accept=".jpg, .jpeg, .png"
+                            onChange={handleFileChange}
+                        />
+                        {eventImageName && <p>Selected file: {eventImageName}</p>}
+                        {imageError && <p className="error" style={{ color: "red" }}>{imageError}</p>}
+                    </label>
+                    <div className="radio-group">
                     <p>Select Event Mode:</p>
                     <label>
                         <input
@@ -274,7 +270,16 @@ const EventUpdateForm = () => {
                         Offline
                     </label>
                 </div>
-                <div className="checkbox-group">
+                    <label>
+                        Event Link:
+                        <input
+                            type="text"
+                            name="eventLink"
+                            value={event.eventLink}
+                            onChange={handleChange}
+                        />
+                    </label>
+                    <div className="checkbox-group">
                     <p>Select Departments:</p>
                     {departments.map((department, index) => (
                         <label key={index}>
@@ -288,10 +293,24 @@ const EventUpdateForm = () => {
                         </label>
                     ))}
                 </div>
-                <button type="submit">Update Event</button>
-            </form>
-        </div>
-    </>
+                    <div className="checkbox-group">
+                        <p>Eligible Years</p>
+                        {years.map((year, index) => (
+                            <label key={index}>
+                                <input
+                                    type="checkbox"
+                                    className="checkbox1"
+                                    checked={event.eligibleYears.includes(year)}
+                                    onChange={() => handleCheckboxChange('eligibleYears', year)}
+                                /><span></span>
+                               {year}
+                            </label>
+                        ))}
+                    </div>
+                    <button type="submit">Update Event</button>
+                </form>
+            </div>
+        </>
     );
 };
 

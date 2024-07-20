@@ -1,4 +1,4 @@
-import { createEvent, getAllEvents, getEventById, updateEventById, getEventsByDepartmentFromModel, getTeamsForEvent, getTeamDetails,approveTeamInModel, rejectTeamInModel, getMemberId,storeReward,checkEventRegistration ,checkTeamMembership} from '../models/eventModel.js';
+import { createEvent,checkCriteria,updateEvent1, createCriteria,getAllEvents, getEventById, updateEventById, getEventsByDepartmentFromModel, getTeamsForEvent, getTeamDetails,approveTeamInModel, rejectTeamInModel, getMemberId,storeReward,checkEventRegistration ,checkTeamMembership,getTeamSizeByEventName,getEligibleYearFromDb} from '../models/eventModel.js';
 import { getStudentByEmail } from '../models/studentModel.js';
 import multer from 'multer';
 import path from 'path';
@@ -20,23 +20,116 @@ export const uploadEventFiles = upload.fields([
     { name: 'eventImage', maxCount: 1 }
 ]);
 
-export const handleEventUpload = (req, res) => {
+export const handleEventUpload = async (req, res) => {
+  try {
     const eventData = req.body;
+
+    // Handling file uploads for event notice and image
     if (req.files['eventNotice']) {
-        eventData.eventNotice = req.files['eventNotice'][0].path.replace(/\\/g, '/');
+      eventData.eventNotice = req.files['eventNotice'][0].path.replace(/\\/g, '/');
     }
     if (req.files['eventImage']) {
-        eventData.eventImage = req.files['eventImage'][0].path.replace(/\\/g, '/');
+      eventData.eventImage = req.files['eventImage'][0].path.replace(/\\/g, '/');
     }
 
-    createEvent(eventData, (err, result) => {
-        if (err) {
-            console.error('Error inserting event data:', err);
-            return res.status(500).json({ error: 'Failed to create event' });
-        }
-        res.status(201).json({ message: 'Event created successfully', eventId: result.insertId });
+    // Remove criteria from eventData before inserting into the events table
+    const criteria = eventData.criteria;
+    delete eventData.criteria;
+
+    // Convert teamSize to integer
+    eventData.teamSize = parseInt(eventData.teamSize, 10);
+
+    if (isNaN(eventData.teamSize)) {
+      throw new Error('Invalid teamSize value');
+    }
+
+    console.log('Event Data:', eventData);
+
+    // Insert event data into the events table
+    const eventResult = await new Promise((resolve, reject) => {
+      createEvent(eventData, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
     });
+
+    const eventId = eventResult.insertId;
+
+    // Prepare criteria data based on the eligible years
+    const criteriaData = {
+      year1course: null,
+      year1level: null,
+      year2course: null,
+      year2level: null,
+      year3course: null,
+      year3level: null,
+      year4course: null,
+      year4level: null
+    };
+
+    // Manually check and assign values to criteria fields
+    criteria.forEach(item => {
+      if (item) {
+        const level = parseInt(item.level, 10);
+        switch (level) {
+          case 1:
+            criteriaData.year1course = item.testTitle || null;
+            criteriaData.year1level = level || null;
+            break;
+          case 2:
+            criteriaData.year2course = item.testTitle || null;
+            criteriaData.year2level = level || null;
+            break;
+          case 3:
+            criteriaData.year3course = item.testTitle || null;
+            criteriaData.year3level = level || null;
+            break;
+          case 4:
+            criteriaData.year4course = item.testTitle || null;
+            criteriaData.year4level = level || null;
+            break;
+          default:
+            break;
+        }
+      }
+    });
+
+    console.log('Criteria Data:', criteriaData);
+
+    let criteriaId = null;
+
+    // Insert criteria data into the criteria table if available
+    if (Object.values(criteriaData).some(value => value !== null)) {
+      const criteriaResult = await new Promise((resolve, reject) => {
+        createCriteria(criteriaData, (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        });
+      });
+
+      criteriaId = criteriaResult.insertId;
+    }
+
+    console.log('Criteria ID:', criteriaId);
+
+    // Update event with criteria_id if criteria were inserted
+    if (criteriaId) {
+      await new Promise((resolve, reject) => {
+        updateEvent1(eventId, { criteria_id: criteriaId }, (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        });
+      });
+    }
+
+    res.status(201).json({ message: 'Event created successfully', eventId: eventId });
+  } catch (error) {
+    console.error('Error in handleEventUpload:', error);
+    res.status(500).json({ error: 'Failed to create event' });
+  }
 };
+
+
 
 export const getEvents = (req, res) => {
     getAllEvents((err, results) => {
@@ -101,73 +194,78 @@ export const updateEvent = (req, res) => {
 };
 
 export const getStudentEvents = (req, res) => {
-    const { email } = req.query;
-  
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
+  const { email } = req.query;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  // Step 1: Fetch student data
+  getStudentByEmail(email, (err, studentResults) => {
+    if (err) {
+      console.error('Error retrieving student data:', err);
+      return res.status(500).json({ error: 'Failed to retrieve student data' });
     }
-  
-    getStudentByEmail(email, (err, studentResults) => {
+
+    if (studentResults.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const studentData = studentResults[0];
+    const department = studentData.department;
+    const yearOfStudy = studentData.yearOfStudy;
+
+    // Step 2: Fetch events by department
+    getEventsByDepartmentFromModel(department, (err, eventsResults) => {
       if (err) {
-        console.error('Error retrieving student data:', err);
-        return res.status(500).json({ error: 'Failed to retrieve student data' });
+        console.error('Error retrieving events by department:', err);
+        return res.status(500).json({ error: 'Failed to retrieve events' });
       }
-  
-      if (studentResults.length === 0) {
-        return res.status(404).json({ error: 'Student not found' });
-      }
-  
-      const studentData = studentResults[0];
-      const department = studentData.department;
-  
-      getEventsByDepartmentFromModel(department, (err, eventsResults) => {
-        if (err) {
-          console.error('Error retrieving events by department:', err);
-          return res.status(500).json({ error: 'Failed to retrieve events' });
-        }
-  
-        const filteredEvents = [];
-  
-        const checkRegistrationsAndMemberships = (index) => {
-          if (index >= eventsResults.length) {
-            return res.status(200).json({
-              department,
-              events: filteredEvents
-            });
-          }
-  
-          const event = eventsResults[index];
-  
-          checkEventRegistration(event.name, (err, isRegistered) => {
-            if (err) {
-              console.error('Error checking event registration:', err);
-              return res.status(500).json({ error: 'Failed to check event registration' });
-            }
-  
-            if (isRegistered) {
-              return checkRegistrationsAndMemberships(index + 1);
-            }
-  
-            checkTeamMembership(email, event.id, (err, isTeamMember) => {
-              if (err) {
-                console.error('Error checking team membership:', err);
-                return res.status(500).json({ error: 'Failed to check team membership' });
-              }
-  
-              if (!isTeamMember) {
-                filteredEvents.push(event);
-              }
-  
-              checkRegistrationsAndMemberships(index + 1);
-            });
+
+      const filteredEvents = [];
+
+      const checkRegistrationsAndCriteria = (index) => {
+        if (index >= eventsResults.length) {
+          return res.status(200).json({
+            department,
+            events: filteredEvents
           });
-        };
-  
-        checkRegistrationsAndMemberships(0);
-      });
+        }
+
+        const event = eventsResults[index];
+
+        // Step 3: Check if the student is registered for the event
+        checkEventRegistration(event.name, (err, isRegistered) => {
+          if (err) {
+            console.error('Error checking event registration:', err);
+            return res.status(500).json({ error: 'Failed to check event registration' });
+          }
+
+          if (isRegistered) {
+            return checkRegistrationsAndCriteria(index + 1);
+          }
+
+          // Step 4: Check event criteria
+          checkCriteria(event.id, yearOfStudy, email, (err, isEligible) => {
+            if (err) {
+              console.error('Error checking event criteria:', err);
+              return res.status(500).json({ error: 'Failed to check event criteria' });
+            }
+
+            if (isEligible) {
+              filteredEvents.push(event);
+            }
+
+            checkRegistrationsAndCriteria(index + 1);
+          });
+        });
+      };
+
+      checkRegistrationsAndCriteria(0);
     });
-  };
-  
+  });
+};
+
 
 export const fetchTeamsForEvent = (req, res) => {
     const { eventName } = req.params;
@@ -233,4 +331,50 @@ export const approveTeam = (req, res) => {
       console.error('Error fetching member IDs:', error);
       res.status(500).send('Error fetching member IDs');
     }
+  };
+
+  export const fetchTestTitlesByYear = async (req, res) => {
+    const { year } = req.params;
+    try {
+      const testTitles = await getTestTitlesByYear(year);
+      res.status(200).json(testTitles);
+    } catch (error) {
+      console.error('Error fetching test titles:', error);
+      res.status(500).json({ error: 'Failed to fetch test titles' });
+    }
+  };
+  
+  export const getTeamSize = (req, res) => {
+    const { eventName } = req.params;
+    
+    getTeamSizeByEventName(eventName, (error, result) => {
+      if (error) {
+        console.error('Error fetching team size:', error);
+        return res.status(500).json({ error: 'Failed to fetch team size' });
+      }
+      
+      if (result.length === 0) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      
+      res.status(200).json(result[0]); // Assuming only one row is returned
+    });
+  };
+  
+  export const getEligibleYear = (req, res) => {
+    const { eventName } = req.params;
+  
+    getEligibleYearFromDb(eventName, (err, event) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return res.status(500).json({ error: 'Failed to fetch eligible year' });
+      }
+      if (!event) {
+        console.log('No event found for:', eventName);
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      console.log("From controller")
+      console.log(event.eligibleYears)
+      res.status(200).json({ eligibleYear: event.eligibleYears });
+    });
   };

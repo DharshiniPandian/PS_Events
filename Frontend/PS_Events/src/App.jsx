@@ -15,6 +15,10 @@ import EventRegister from './Students/EventRegister';
 import TeamMemberDetails from './Students/TeamMemberDetails';
 import VerifyData from './Students/VerifyData';
 import TeamDetails from './Admin/TeamDetails';
+import RegistrationData from './Students/RegistrationData';
+import RegisteredEvents from './Students/RegisteredEvents';
+import RegistrationStatus from './Students/RegistrationStatus';
+import ReportSubmissionForm from './Students/ReportSubmissionForm';
 
 function App() {
   const [formData, setFormData] = useState({
@@ -89,6 +93,11 @@ function App() {
         <Route path="/team-members/:memberIndex" element={<TeamMemberDetails formData={formData} setFormData={setFormData} />} />
         <Route path="/verify" element={<VerifyData formData={formData} />} />
         <Route path="/team-details/:eventId/:teamName" element={<TeamDetails />} />
+        <Route path="/registeredevents" element={<RegisteredEvents />} />
+        <Route path="/reportSubmissionForm/:eventName" element={<ReportSubmissionForm />} />/
+        
+       
+        <Route path="/registration-status/:eventName" element={<RegistrationStatus />} />
         </Routes>
       </div>
     </div>

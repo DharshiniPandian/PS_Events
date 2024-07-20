@@ -107,3 +107,12 @@
   font-weight: 500;
   
 }
+
+.title {
+  display: flex;
+  align-items: center;  
+}
+
+.title h2 {
+  margin-left: 10px; 
+}

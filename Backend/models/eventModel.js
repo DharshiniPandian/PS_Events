@@ -2,8 +2,18 @@
 import db from './db.js';
 
 export const createEvent = (eventData, callback) => {
-  const sql = 'INSERT INTO events SET ?';
-  db.query(sql, eventData, callback);
+  const query = 'INSERT INTO events SET ?';
+  db.query(query, eventData, callback);
+};
+
+export const createCriteria = (criteriaData, callback) => {
+  const query = 'INSERT INTO criteria SET ?';
+  db.query(query, criteriaData, callback);
+};
+
+export const updateEvent1 = (eventId, eventData, callback) => {
+  const query = 'UPDATE events SET ? WHERE id = ?';
+  db.query(query, [eventData, eventId], callback);
 };
 
 export const getAllEvents = (callback) => {
@@ -44,7 +54,7 @@ export const updateEventById = (id, eventData, callback) => {
   const sql = 'UPDATE events SET ? WHERE id = ?';
   db.query(sql, [eventData, id], callback);
 };
-
+ //here
 export const getEventsByDepartmentFromModel = (department, callback) => {
   const sql = 'SELECT id, name, eventImage FROM events WHERE FIND_IN_SET(?, departments)';
 
@@ -57,6 +67,50 @@ export const getEventsByDepartmentFromModel = (department, callback) => {
   });
 };
 
+export const checkCriteria = (eventId, yearOfStudy, email, callback) => {
+  // Fetch student details including levelsCompleted
+  const studentSql = 'SELECT levelsCompleted, course FROM student WHERE email = ?';
+  db.query(studentSql, [email], (err, studentResults) => {
+    if (err) return callback(err);
+
+    if (studentResults.length === 0) {
+      return callback(new Error('Student not found'));
+    }
+
+    const studentData = studentResults[0];
+    const levelsCompleted = studentData.levelsCompleted; // Single integer representing highest level completed
+    const course = studentData.course;
+
+    // Fetch criteria for the event
+    const criteriaSql = `
+      SELECT c.*
+      FROM criteria c
+      JOIN events e ON c.id = e.criteria_id
+      WHERE e.id = ?
+    `;
+    db.query(criteriaSql, [eventId], (err, criteriaResults) => {
+      if (err) return callback(err);
+
+      if (criteriaResults.length === 0) {
+        return callback(null, false);
+      }
+
+      const criteria = criteriaResults[0];
+      const isEligible = (
+        (criteria.year1course === course && yearOfStudy === 1 && levelsCompleted >= criteria.year1level) ||
+        (criteria.year2course === course && yearOfStudy === 2 && levelsCompleted >= criteria.year2level) ||
+        (criteria.year3course === course && yearOfStudy === 3 && levelsCompleted >= criteria.year3level) ||
+        (criteria.year4course === course && yearOfStudy === 4 && levelsCompleted >= criteria.year4level)
+      );
+
+      callback(null, isEligible);
+    });
+  });
+};
+
+
+
+//here
 export const checkEventRegistration = (eventName, callback) => {
   if (typeof eventName !== 'string') {
     return callback(new Error('Invalid input types'));
@@ -72,6 +126,7 @@ export const checkEventRegistration = (eventName, callback) => {
   });
 };
 
+//here
 export const checkTeamMembership = (email, eventid, callback) => {
   if (typeof email !== 'string' || typeof eventid !== 'number') {
     return callback(new Error('Invalid input types'));
@@ -89,7 +144,7 @@ export const checkTeamMembership = (email, eventid, callback) => {
 
 
 export const getTeamsForEvent = (eventName, callback) => {
-  const sql = 'SELECT * FROM event_registration WHERE eventName = ? AND level1 = 0 AND rejected IS NULL';
+  const sql = 'SELECT * FROM event_registration WHERE eventName = ?';
   db.query(sql, [eventName], (err, results) => {
     if (err) {
       console.error('Error fetching teams for event:', err);
@@ -99,8 +154,8 @@ export const getTeamsForEvent = (eventName, callback) => {
   });
 };
 
+//here
 export const getTeamDetails = (eventId, teamName, callback) => {
-  // First Query: Fetch Event Registration Details
   const eventRegistrationQuery = `
  SELECT 
   eventId, eventName, teamName, projectTitle, projectObjective, 
@@ -109,7 +164,6 @@ FROM event_registration
 WHERE eventId = ? AND teamName = ?
   `;
 
-  // Second Query: Fetch Team Members Details
   const teamMembersQuery = `
       SELECT 
         name, email, rollNo, year, department, isTeamLeader
@@ -117,7 +171,6 @@ WHERE eventId = ? AND teamName = ?
       WHERE eventId = ? AND teamName = ?
     `;
 
-  // Run both queries sequentially
   db.query(eventRegistrationQuery, [eventId, teamName], (err, eventResults) => {
     if (err) {
       console.error('Error fetching event registration details:', err);
@@ -136,7 +189,6 @@ WHERE eventId = ? AND teamName = ?
         return callback(err);
       }
 
-      // Combine results
       const teamDetails = {
         ...eventDetails,
         members: memberResults
@@ -148,12 +200,12 @@ WHERE eventId = ? AND teamName = ?
     });
   });
 };
-
+//ok
 export const approveTeamInModel = (eventId, teamName, callback) => {
   const sql = 'UPDATE event_registration SET level1 = 1 WHERE eventId = ? AND teamName = ?';
   db.query(sql, [eventId, teamName], callback);
 };
-
+//ok
 export const rejectTeamInModel = (eventId, teamName, rejectionReason, callback) => {
   const sql = 'UPDATE event_registration SET rejected = ? WHERE eventId = ? AND teamName = ?';
   db.query(sql, [rejectionReason, eventId, teamName], callback);
@@ -178,5 +230,45 @@ export const storeReward = (rewards, callback) => {
 
   db.query(query, [values], (error, results) => {
     callback(error, results);
+  });
+};
+
+// Fetch distinct test titles by eligible year
+export const getTestTitlesByYear = (year, callback = (err, res) => { if (err) throw err; }) => {
+  const getTestTitlesQuery = `
+    SELECT DISTINCT testTitle 
+    FROM assessment 
+    WHERE eligibleYear = ?
+  `;
+  db.query(getTestTitlesQuery, [year], (error, results) => {
+    if (error) {
+      return callback(error, null);
+    }
+    console.log(results)
+    return callback(null, results);
+  });
+};
+
+export const getTeamSizeByEventName = (eventName, callback) => {
+  const query = 'SELECT teamSize FROM events WHERE name = ?';
+  db.query(query, [eventName], (error, results) => {
+    if (error) {
+      return callback(error, null);
+    }
+    callback(null, results);
+  });
+};
+
+export const getEligibleYearFromDb = (eventName, callback) => {
+  const query = 'SELECT eligibleYears FROM events WHERE name = ?';
+  db.query(query, [eventName], (err, results) => {
+    if (err) {
+      return callback(err, null);
+    }
+    if (results.length === 0) {
+      return callback(new Error('Event not found'), null);
+    }
+    console.log(results[0]);
+    callback(null, results[0]);
   });
 };
