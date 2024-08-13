@@ -2,9 +2,19 @@
 import db from './db.js';
 
 export const createEvent = (eventData, callback) => {
-  const query = 'INSERT INTO events SET ?';
-  db.query(query, eventData, callback);
+  const checkQuery = 'SELECT * FROM events WHERE name = ?';
+  db.query(checkQuery, [eventData.name], (err, results) => {
+    if (err) {
+      return callback(err);
+    }
+    if (results.length > 0) {
+      return callback(new Error('Event name already exists'));
+    }
+    const insertQuery = 'INSERT INTO events SET ?';
+    db.query(insertQuery, eventData, callback);
+  });
 };
+
 
 export const createCriteria = (criteriaData, callback) => {
   const query = 'INSERT INTO criteria SET ?';
@@ -33,7 +43,12 @@ export const getAllEvents = (callback) => {
 };
 
 export const getEventById = (id, callback) => {
-  const sql = 'SELECT * FROM events WHERE id = ?';
+  const sql = `
+    SELECT e.*, c.year1course, c.year1level, c.year2course, c.year2level, c.year3course, c.year3level, c.year4course, c.year4level
+    FROM events e
+    LEFT JOIN criteria c ON e.criteria_id = c.id
+    WHERE e.id = ?
+  `;
   db.query(sql, [id], (err, results) => {
     if (err) return callback(err);
 
@@ -49,14 +64,135 @@ export const getEventById = (id, callback) => {
     callback(null, event);
   });
 };
-
 export const updateEventById = (id, eventData, callback) => {
-  const sql = 'UPDATE events SET ? WHERE id = ?';
-  db.query(sql, [eventData, id], callback);
+  const departmentsString = Array.isArray(eventData.departments) ? eventData.departments.join(', ') : eventData.departments;
+
+  const eventUpdate = {
+    name: eventData.name,
+    description: eventData.description,
+    eventStartDate: eventData.eventStartDate,
+    eventEndDate: eventData.eventEndDate,
+    registrationStartDate: eventData.registrationStartDate,
+    registrationEndDate: eventData.registrationEndDate,
+    departments: departmentsString,
+    eligibleYears: eventData.eligibleYears,
+    teamSize: eventData.teamSize,
+    eventMode: eventData.eventMode,
+    eventLink: eventData.eventLink,
+    eventImage: eventData.eventImage,
+    eventNotice: eventData.eventNotice,
+    levelCount: eventData.levelCount,
+    level1description: eventData.levelDetails?.level1?.description || null,
+    level1rewards: eventData.levelDetails?.level1?.rewards || null,
+    level2description: eventData.levelDetails?.level2?.description || null,
+    level2rewards: eventData.levelDetails?.level2?.rewards || null,
+    level3description: eventData.levelDetails?.level3?.description || null,
+    level3rewards: eventData.levelDetails?.level3?.rewards || null,
+    level4description: eventData.levelDetails?.level4?.description || null,
+    level4rewards: eventData.levelDetails?.level4?.rewards || null,
+  };
+
+  // Convert 'null' strings to actual null values
+  for (const key in eventUpdate) {
+    if (eventUpdate[key] === 'null') {
+      eventUpdate[key] = null;
+    }
+  }
+
+  const criteriaUpdate = {};
+
+  if (eventData.criteria) {
+    criteriaUpdate.year1course = eventData.criteria.year1?.course || null;
+    criteriaUpdate.year1level = eventData.criteria.year1?.level || null;
+    criteriaUpdate.year2course = eventData.criteria.year2?.course || null;
+    criteriaUpdate.year2level = eventData.criteria.year2?.level || null;
+    criteriaUpdate.year3course = eventData.criteria.year3?.course || null;
+    criteriaUpdate.year3level = eventData.criteria.year3?.level || null;
+    criteriaUpdate.year4course = eventData.criteria.year4?.course || null;
+    criteriaUpdate.year4level = eventData.criteria.year4?.level || null;
+  }
+
+  // Convert 'null' strings to actual null values for criteria
+  for (const key in criteriaUpdate) {
+    if (criteriaUpdate[key] === 'null') {
+      criteriaUpdate[key] = null;
+    }
+  }
+
+  console.log('Criteria Update:', criteriaUpdate);  // Log the criteriaUpdate object
+  console.log('Event Update:', eventUpdate);  // Log the eventUpdate object
+
+  db.beginTransaction(err => {
+    if (err) return callback(err);
+
+    const updateCriteria = () => {
+      db.query('UPDATE criteria SET ? WHERE id = (SELECT criteria_id FROM events WHERE id = ?)', [criteriaUpdate, id], (err, result) => {
+        if (err) {
+          console.error('Error updating criteria:', err);  // Log the error
+          return db.rollback(() => {
+            callback(err);
+          });
+        }
+        updateEventDetails();
+      });
+    };
+
+    const updateEventDetails = () => {
+      db.query('UPDATE events SET ? WHERE id = ?', [eventUpdate, id], (err, result) => {
+        if (err) {
+          console.error('Error updating event details:', err);  // Log the error
+          return db.rollback(() => {
+            callback(err);
+          });
+        }
+
+        db.commit(err => {
+          if (err) {
+            console.error('Error committing transaction:', err);  // Log the error
+            return db.rollback(() => {
+              callback(err);
+            });
+          }
+          callback(null, result);
+        });
+      });
+    };
+
+    if (Object.keys(criteriaUpdate).length > 0) {
+      updateCriteria();
+    } else {
+      updateEventDetails();
+    }
+  });
 };
+// const updateEventDetails = (eventUpdate, id, callback) => {
+//   db.query('UPDATE events SET ? WHERE id = ?', [eventUpdate, id], (err, result) => {
+//       if (err) {
+//           return db.rollback(() => {
+//               callback(err);
+//           });
+//       }
+
+//       db.commit(err => {
+//           if (err) {
+//               return db.rollback(() => {
+//                   callback(err);
+//               });
+//           }
+//           callback(null, result);
+//       });
+//   });
+// };
+
+
  //here
 export const getEventsByDepartmentFromModel = (department, callback) => {
-  const sql = 'SELECT id, name, eventImage FROM events WHERE FIND_IN_SET(?, departments)';
+  const sql = `
+  SELECT id, name, eventImage 
+  FROM events 
+  WHERE FIND_IN_SET(?, departments) 
+  AND registrationEndDate >= CURDATE()
+`;
 
   db.query(sql, [department], (err, results) => {
     if (err) {
@@ -67,6 +203,8 @@ export const getEventsByDepartmentFromModel = (department, callback) => {
   });
 };
 
+
+//reference
 export const checkCriteria = (eventId, yearOfStudy, email, callback) => {
   // Fetch student details including levelsCompleted
   const studentSql = 'SELECT levelsCompleted, course FROM student WHERE email = ?';
@@ -111,24 +249,31 @@ export const checkCriteria = (eventId, yearOfStudy, email, callback) => {
 
 
 //here
-export const checkEventRegistration = (eventName, callback) => {
-  if (typeof eventName !== 'string') {
+export const checkEventRegistration = (eventName, email, callback) => {
+  if (typeof eventName !== 'string' || typeof email !== 'string') {
     return callback(new Error('Invalid input types'));
   }
 
-  const sql = 'SELECT * FROM event_registration WHERE eventName = ?';
-  db.query(sql, [eventName], (err, results) => {
+  const sql = `
+    SELECT er.*
+    FROM event_registration er
+    JOIN team_members tr ON tr.eventId = er.eventId
+    WHERE er.eventName = ? AND tr.email = ?;
+  `;
+  
+  db.query(sql, [eventName, email], (err, results) => {
     if (err) {
       console.error('Error executing query:', err);
       return callback(err);
     }
-    callback(null, results.length > 0);
+    callback(null, results.length > 0); // Adjust as needed to return a boolean or results
   });
 };
 
+
 //here
 export const checkTeamMembership = (email, eventid, callback) => {
-  if (typeof email !== 'string' || typeof eventid !== 'number') {
+  if (typeof email !== 'string' || typeof eventid !== 'number' || typeof callback !== 'function') {
     return callback(new Error('Invalid input types'));
   }
 
@@ -143,8 +288,23 @@ export const checkTeamMembership = (email, eventid, callback) => {
 };
 
 
+
 export const getTeamsForEvent = (eventName, callback) => {
-  const sql = 'SELECT * FROM event_registration WHERE eventName = ?';
+  const sql = `
+  SELECT er.*, e.*, r.*
+  FROM event_registration er
+  JOIN events e ON er.eventName = e.name
+  LEFT JOIN (
+    SELECT r.*
+    FROM report r
+    INNER JOIN (
+      SELECT eventId, MAX(reportID) as latestReportID
+      FROM report
+      GROUP BY eventId
+    ) lr ON r.eventId = lr.eventId AND r.reportID = lr.latestReportID
+  ) r ON er.eventId = r.eventId
+  WHERE e.name = ?;
+  `;
   db.query(sql, [eventName], (err, results) => {
     if (err) {
       console.error('Error fetching teams for event:', err);
@@ -157,16 +317,14 @@ export const getTeamsForEvent = (eventName, callback) => {
 //here
 export const getTeamDetails = (eventId, teamName, callback) => {
   const eventRegistrationQuery = `
- SELECT 
-  eventId, eventName, teamName, projectTitle, projectObjective, 
-  existingMethodology, proposedMethodology, teamSize
+ SELECT *
 FROM event_registration
 WHERE eventId = ? AND teamName = ?
   `;
 
   const teamMembersQuery = `
       SELECT 
-        name, email, rollNo, year, department, isTeamLeader
+        name, email, rollNo, year, department, isTeamLeader,reward_level1,reward_level2,reward_level3,reward_level4
       FROM team_members
       WHERE eventId = ? AND teamName = ?
     `;
@@ -202,13 +360,28 @@ WHERE eventId = ? AND teamName = ?
 };
 //ok
 export const approveTeamInModel = (eventId, teamName, callback) => {
-  const sql = 'UPDATE event_registration SET level1 = 1 WHERE eventId = ? AND teamName = ?';
+  const sql = 'UPDATE event_registration SET RegistrationApproval = 1 WHERE eventId = ? AND teamName = ?';
   db.query(sql, [eventId, teamName], callback);
 };
 //ok
 export const rejectTeamInModel = (eventId, teamName, rejectionReason, callback) => {
   const sql = 'UPDATE event_registration SET rejected = ? WHERE eventId = ? AND teamName = ?';
   db.query(sql, [rejectionReason, eventId, teamName], callback);
+};
+
+export const reSubmitTeamInModel = (eventId, teamName, reSubmitReason, callback) => {
+  const sql = 'UPDATE event_registration SET reSubmit = ?, reSubmitReason = ? WHERE eventId = ? AND teamName = ?';
+  console.log('Executing SQL:', sql);
+  console.log('With parameters:', [1, reSubmitReason, eventId, teamName]);
+
+  db.query(sql, [1, reSubmitReason, eventId, teamName], (err, result) => {
+    if (err) {
+      console.error('Error executing SQL query:', err);
+    } else {
+      console.log('Query result:', result);
+    }
+    callback(err, result);
+  });
 };
 
 export const getMemberId = (name, eventId, callback) => {
@@ -221,15 +394,6 @@ export const getMemberId = (name, eventId, callback) => {
       return callback(new Error('Member not found'));
     }
     callback(null, results[0].memberId);
-  });
-};
-
-export const storeReward = (rewards, callback) => {
-  const query = `INSERT INTO rewards_summary (memberId, eventId, level1) VALUES ?`;
-  const values = rewards.map(reward => [reward.memberId, reward.eventId, reward.level1]);
-
-  db.query(query, [values], (error, results) => {
-    callback(error, results);
   });
 };
 
@@ -270,5 +434,191 @@ export const getEligibleYearFromDb = (eventName, callback) => {
     }
     console.log(results[0]);
     callback(null, results[0]);
+  });
+};
+
+export const getReportByEventID = (eventID, callback) => {
+  const sql = 'SELECT r.*, er.* FROM report r JOIN event_registration er ON r.eventID = er.eventID WHERE r.eventID = ?';
+
+  db.query(sql, [eventID], callback);
+};
+
+export const getLevel2ApprovalStatusFromDb = (eventId) => {
+  const sql = 'SELECT level2Approval FROM event_registration WHERE eventId = ?';
+  return new Promise((resolve, reject) => {
+      db.query(sql, [eventId], (err, result) => {
+          if (err) {
+              return reject(err);
+          }
+          resolve(result[0]); 
+      });
+  });
+};
+
+export const getTeamMembersFromDb = (eventID) => {
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM team_members WHERE eventId = ?';
+    db.query(query, [eventID], (error, results) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(results);
+    });
+  });
+};
+
+export const assignRewardPoints = (memberId, rewardPoints) => {
+  const sql = 'UPDATE team_members SET rewards = ? WHERE memberId = ?';
+  console.log(memberId)
+  console.log(rewardPoints)
+  return new Promise((resolve, reject) => {
+      db.query(sql, [rewardPoints, memberId], (err, result) => {
+          if (err) return reject(err);
+          if (result.affectedRows === 0) return reject(new Error('Member not found'));
+          resolve(result);
+      });
+  });
+};
+
+export const updateEventLevel2Approval = (eventID) => {
+  const sql = 'UPDATE event_registration SET level2Approval = 1 WHERE eventID = ?';
+  return new Promise((resolve, reject) => {
+      db.query(sql, [eventID], (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+      });
+  });
+};
+
+export const getEventToUpdateById = (id, callback) => {
+  const sqlEvent = `
+      SELECT *
+      FROM events
+      WHERE id = ?
+  `;
+
+  db.query(sqlEvent, [id], (err, eventResults) => {
+      if (err) return callback(err);
+
+      if (eventResults.length === 0) {
+          return callback(null, []);
+      }
+
+      const event = eventResults[0];
+      if (typeof event.departments === 'string') {
+          event.departments = event.departments.split(',').map(department => department.trim());
+      }
+
+      const sqlCriteria = `
+          SELECT *
+          FROM criteria
+          WHERE id = ?
+      `;
+
+      db.query(sqlCriteria, [event.criteria_id], (err, criteriaResults) => {
+          if (err) return callback(err);
+
+          if (criteriaResults.length === 0) {
+              return callback(null, { ...event, criteria: {} });
+          }
+
+          const criteria = criteriaResults[0];
+
+          const formattedCriteria = {
+              year1: {
+                  course: criteria.year1course,
+                  level: criteria.year1level
+              },
+              year2: {
+                  course: criteria.year2course,
+                  level: criteria.year2level
+              },
+              year3: {
+                  course: criteria.year3course,
+                  level: criteria.year3level
+              },
+              year4: {
+                  course: criteria.year4course,
+                  level: criteria.year4level
+              }
+          };
+
+          callback(null, { ...event, criteria: formattedCriteria });
+      });
+  });
+};
+
+
+export const updateApprovalStatus = (eventId, level) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      UPDATE event_registration
+      SET level${level}Approval = 1
+      WHERE eventId = ? 
+    `;
+    db.query(sql, [eventId], (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+};
+
+// Existing functions
+export const getEventRewards = (eventId, level) => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT e.level${level}rewards AS rewardPoints 
+      FROM events e
+      JOIN event_registration er ON e.name = er.eventName
+      WHERE er.eventId = ? 
+    `;
+    db.query(sql, [eventId], (err, result) => {
+      if (err) return reject(err);
+      resolve(result[0]);
+    });
+  });
+};
+
+export const getTeamMembersByEvent = (eventId) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT memberId FROM team_members WHERE eventId = ?';
+    db.query(sql, [eventId], (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
+export const updateRewardPoints = (memberId, rewardPoints, level) => {
+  return new Promise((resolve, reject) => {
+    const column = `reward_level${level}`;
+    const sql = `UPDATE team_members SET ${column} = ? WHERE memberId = ?`;
+    db.query(sql, [rewardPoints, memberId], (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+};
+
+
+// Function to find registration by eventId and level
+export const findRegistration = (eventId, level) => {
+  const sql = 'SELECT * FROM event_registration WHERE eventId = ?';
+  return new Promise((resolve, reject) => {
+    db.query(sql, [eventId], (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
+// Function to update resubmission details
+export const updateResubmission = (eventId, level, reason) => {
+  const sql = 'UPDATE event_registration SET reSubmitReason = ?, reSubmit = ? WHERE eventId = ? ';
+  return new Promise((resolve, reject) => {
+    db.query(sql, [reason, 1, eventId], (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
   });
 };

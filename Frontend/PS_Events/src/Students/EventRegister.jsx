@@ -6,7 +6,7 @@ import { FaArrowCircleLeft } from "react-icons/fa";
 import './EventRegister.css';
 
 const EventRegister = ({ formData, setFormData }) => {
-  const { eventName } = useParams(); // Extract only eventName from URL parameters
+  const { eventName } = useParams(); 
   const { user } = useContext(UserContext);
   const [localFormData, setLocalFormData] = useState({
     eventName: eventName || '',
@@ -49,7 +49,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
   useEffect(() => {
     if (studentData) {
-      console.log('Updating local form data with student data:', studentData);
+      //console.log('Updating local form data with student data:', studentData);
       setLocalFormData(prevData => ({
         ...prevData,
         year: studentData.yearOfStudy || prevData.year,
@@ -65,8 +65,8 @@ const EventRegister = ({ formData, setFormData }) => {
     if (eventName) {
       axios.get(`http://localhost:8081/events/teamSize/${eventName}`)
         .then(response => {
-          console.log('Fetched event data:', response.data);
-          setMaxTeamSize(response.data.teamSize || 0); // Ensure `teamSize` is correctly assigned
+          //console.log('Fetched event data:', response.data);
+          setMaxTeamSize(response.data.teamSize || 0); 
         })
         .catch(error => {
           console.error('Error fetching event details:', error);
@@ -92,14 +92,17 @@ const EventRegister = ({ formData, setFormData }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+  
     // Update formData with localFormData and correct number of team members
     setFormData(prevData => ({
       ...prevData,
       initialData: localFormData,
-      teamMembers: Array(parseInt(localFormData.teamSize, 10) - 1).fill({}),
+      teamMembers: prevData.teamMembers.length === 0
+        ? Array(parseInt(localFormData.teamSize, 10) - 1).fill({})
+        : prevData.teamMembers,
     }));
-
+    
+  
     // Navigate based on teamSize
     if (localFormData.teamSize === '1') {
       navigate('/verify');
@@ -107,7 +110,7 @@ const EventRegister = ({ formData, setFormData }) => {
       navigate('/team-members/1');
     }
   };
-
+  
   return (
     <>
       <div className='title'>
@@ -121,7 +124,7 @@ const EventRegister = ({ formData, setFormData }) => {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="teamName">
-                <p>Team Name:</p>
+                <p>Team Name:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
                 type="text"
@@ -135,7 +138,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="teamLeaderName">
-                <p>Team Leader Name:</p>
+                <p>Team Leader Name:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
                 type="text"
@@ -149,7 +152,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="rollNo">
-                <p>Roll Number:</p>
+                <p>Roll Number:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
                 type="text"
@@ -163,7 +166,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="email">
-                <p>Email:</p>
+                <p>Email:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
                 type="email"
@@ -177,7 +180,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="year">
-                <p>Year:</p>
+                <p>Year:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
                 id="year"
@@ -190,7 +193,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="department">
-                <p>Department:</p>
+                <p>Department:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
                 id="department"
@@ -203,7 +206,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="teamSize">
-                <p>Team size:</p>
+                <p>Team size:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
                 type="number"
@@ -219,7 +222,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="projectTitle">
-                <p>Project Title:</p>
+                <p>Project Title:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
                 type="text"
@@ -233,7 +236,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="projectObjective">
-                <p>Project Objective:</p>
+                <p>Project Objective:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <textarea
                 className='para'
@@ -247,7 +250,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="existingMethodology">
-                <p>Existing Methodology:</p>
+                <p>Existing Methodology:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <textarea
                 className='para'
@@ -261,7 +264,7 @@ const EventRegister = ({ formData, setFormData }) => {
 
             <div className="form-group">
               <label htmlFor="proposedMethodology">
-                <p>Methodology of Proposed Plan:</p>
+                <p>Methodology of Proposed Plan:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <textarea
                 className='para'

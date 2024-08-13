@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import './VerifyData.css';
 
 const VerifyData = ({ formData }) => {
@@ -13,7 +13,7 @@ const VerifyData = ({ formData }) => {
 
   const handleFinalSubmit = async () => {
     try {
-      console.log('Sending data:', formData); 
+     // console.log('Sending data:', formData); 
 
       const response = await fetch('http://localhost:8081/register/team-details', {
         method: 'POST',
@@ -29,7 +29,7 @@ const VerifyData = ({ formData }) => {
       }
 
       const result = await response.json();
-      console.log('Registration complete:', result);
+     // console.log('Registration complete:', result);
       alert("Registration complete");
       navigate('/'); 
     } catch (error) {
@@ -46,7 +46,7 @@ const VerifyData = ({ formData }) => {
     <>
       <h2>Verify Your Data</h2>
     <div className="verify-data">
-      <h2>Verify Your Data</h2>
+      
       <div className="confirmation-checkbox">
         <input
           type="checkbox"
@@ -55,7 +55,7 @@ const VerifyData = ({ formData }) => {
           checked={isConfirmed}
           onChange={handleCheckboxChange}
         />
-        <label htmlFor="confirm">I confirm that all the entered details are correct.</label>
+        <label htmlFor="confirm">I confirm that all the entered details are correct.<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></label>
       </div>
       {error && <div style={{ color: 'red' }}>{error}</div>}
       <button type="button" onClick={handleBack}>Back</button>

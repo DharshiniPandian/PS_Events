@@ -1,0 +1,108 @@
+
+.event {
+    padding: 1px;
+    font-weight: 500;
+}
+
+.EventStatus .event-cards {
+    display: flex;
+    flex-wrap: wrap;
+    /* gap: 20px; */
+    margin-top: 20px;
+    /* align-items: center; */
+    /* gap: 20px; */
+    
+}
+.event-status-container {
+    display: flex;
+    flex-direction: row;
+    /* gap: 10px; */
+}
+
+.EventStatus .event-cards {
+    position: relative;
+    width: 310px;
+    height: 220px;
+    border-radius: 10px;
+    overflow: hidden;
+    /* height: max-content; */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    margin-left: 7%;
+    border-radius: 8px;
+    box-sizing: border-box;
+    
+    flex: 1 1;
+    height: -webkit-max-content;
+    height: max-content;
+    margin: 5px;
+    max-width: calc(100% - 10px);
+    
+}
+
+.EventStatus .event-cards img {
+    width: 100%;
+    height: 80%;
+    position: relative;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    
+}
+
+.EventStatus .event-cards .event-text {
+    position: absolute;
+    bottom:0;
+    left: 0;
+    right: 0;
+    padding: 5px;
+    margin: 0;
+    color: #000000;
+    text-align: center;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+}
+.EventStatus .event-cards .icon-container {
+    display: flex;
+    gap: 5px; /* Space between the icons */
+    flex-shrink: 0; /* Prevents the icon container from shrinking */
+}
+
+.EventStatus .event-cards .pen-icon,
+.EventStatus .event-cards .eye-icon {
+    margin-left: 10px;
+    vertical-align: middle;
+    font-size: 18px;
+}
+.event .title{
+    display: flex;
+    margin-right: 10px;
+    gap: 10px; 
+    margin-bottom: 2%;
+    color: rgb(29, 29, 29);
+    font-family: 'Roboto', sans-serif; 
+    font-weight: 500;
+    flex-direction: row;
+    display: flex; 
+    align-items: center; 
+}
+.event .back-link {
+    margin-right: 10px; /* Add space between the link and the heading */
+    display: flex; /* Ensure the link behaves like a block element */
+    align-items: center; 
+  }
+/* .event .course-container{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+} */
+

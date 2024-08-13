@@ -3,6 +3,7 @@ import './Sidenav.css';
 import { NavLink } from 'react-router-dom';
 import { MdOutlineDashboard, MdEventNote } from 'react-icons/md';
 import { HiOutlineDocumentReport } from 'react-icons/hi';
+import { MdLogout } from "react-icons/md";
 
 function Sidenav({ isOpen, role, handleLogout }) {
     return (
@@ -25,16 +26,6 @@ function Sidenav({ isOpen, role, handleLogout }) {
                     </NavLink>
                 </div>
             }
-            {role === 'admin' &&
-                <div className="link">
-                    <NavLink to="/reports" className={({ isActive }) => isActive ? "active" : ""}>
-                        <div className="box">
-                            <HiOutlineDocumentReport className="icon" size={24} />
-                            <p>Reward Points Report</p>
-                        </div>
-                    </NavLink>
-                </div>
-            }
             {role === 'student' &&
                 <div className="link">
                     <NavLink to="/registeredevents" className={({ isActive }) => isActive ? "active" : ""}>
@@ -47,7 +38,7 @@ function Sidenav({ isOpen, role, handleLogout }) {
             }
             <div className="link">
                 <div className="box" onClick={handleLogout}>
-                    <MdEventNote className="icon" size={24} />
+                <MdLogout className="icon" size={24} />
                     <p>Logout</p>
                 </div>
             </div>

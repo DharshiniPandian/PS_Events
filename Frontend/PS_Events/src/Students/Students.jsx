@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from 'axios';
 import { UserContext } from '../UserContext';
-import { useNavigate } from 'react-router-dom'; // For navigation
+import { useNavigate } from 'react-router-dom'; 
 import './Students.css';
 
 function Students() {
@@ -10,7 +10,7 @@ function Students() {
     const [error, setError] = useState(null);
     const [department, setDepartment] = useState('');
     const { user } = useContext(UserContext);
-    const navigate = useNavigate(); // Initialize useNavigate
+    const navigate = useNavigate(); 
 
     useEffect(() => {
         const fetchStudentAndEvents = async () => {
@@ -23,7 +23,6 @@ function Students() {
                 const response = await axios.get('http://localhost:8081/events/student-events', {
                     params: { email: user.email }
                 });
-                console.log(response.data);
                 const { department, events } = response.data;
                 setDepartment(department);
                 setEvents(events);

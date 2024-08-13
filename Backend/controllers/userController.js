@@ -11,6 +11,7 @@ export const loginUser = (req, res) => {
         }
         if (data.length > 0) {
             req.session.role = data[0].role;
+            req.session.email = email; 
             return res.json({ Status: "Success" });
         } else {
             return res.json({ Error: "No such user existed" });
@@ -18,14 +19,16 @@ export const loginUser = (req, res) => {
     });
 };
 
+
 export const checkSession = (req, res) => {
-    //console.log('Session check:', req.session);
-    if (req.session.role) {
-        return res.json({ valid: true, role: req.session.role });
+    if (req.session.role && req.session.email) {
+        return res.json({ valid: true, role: req.session.role, email: req.session.email });
     } else {
         return res.json({ valid: false });
     }
 };
+
+
 
 export const logoutUser = (req, res) => {
     req.session.destroy((err) => {

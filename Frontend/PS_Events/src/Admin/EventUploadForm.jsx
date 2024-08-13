@@ -3,7 +3,8 @@ import axios from "axios";
 import "./EventUploadForm.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { FaArrowCircleLeft } from "react-icons/fa";
 
 const departments = [
   "Agriculture Engineering",
@@ -23,8 +24,6 @@ const departments = [
   "Aeronotical Engineering",
   "Fasion Design",
   "Bio Technology",
-  "Department 16",
-  "Department 17",
 ];
 
 const years = ["1", "2", "3", "4"];
@@ -43,12 +42,25 @@ function EventUploadForm() {
   const [eventMode, setEventMode] = useState("");
   const [eventImage, setEventImage] = useState(null);
   const [imageError, setImageError] = useState("");
+  const [errors, setErrors] = useState({});
   const [eligibleYears, setEligibleYears] = useState([]);
   const [testTitles, setTestTitles] = useState({});
   const [levels, setLevels] = useState({});
   const [selectedTestTitles, setSelectedTestTitles] = useState({});
   const [selectedLevels, setSelectedLevels] = useState({});
+  const [levelCount, setLevelCount] = useState(0);
+  const [descriptions, setDescriptions] = useState([]);
+  const [rewards, setRewards] = useState([]);
+
   const navigate = useNavigate();
+
+  const handleCheckboxChangedept = (department) => {
+    setSelectedDepartments((prevState) =>
+      prevState.includes(department)
+        ? prevState.filter((dep) => dep !== department)
+        : [...prevState, department]
+    );
+  };
 
   const handleCheckboxChange = (setFunction, value) => {
     setFunction((prevState) =>
@@ -56,6 +68,61 @@ function EventUploadForm() {
         ? prevState.filter((item) => item !== value)
         : [...prevState, value]
     );
+  };
+
+  const handleLevelCountChange = (e) => {
+    const count = parseInt(e.target.value, 10);
+    setLevelCount(count);
+
+    // Initialize descriptions and rewards arrays with empty strings
+    const initialDescriptions = Array(count).fill("");
+    const initialRewards = Array(count).fill("");
+    setDescriptions(initialDescriptions);
+    setRewards(initialRewards);
+  };
+
+  const handleDescriptionChange = (index, value) => {
+    const newDescriptions = [...descriptions];
+    newDescriptions[index] = value;
+    setDescriptions(newDescriptions);
+  };
+
+  const handleRewardChange = (index, value) => {
+    const newRewards = [...rewards];
+    newRewards[index] = value;
+    setRewards(newRewards);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!name) newErrors.name = "Event Name is required";
+    if (!description) newErrors.description = "Event Description is required";
+    if (!eventStartDate)
+      newErrors.eventStartDate = "Event Start Date is required";
+    if (!eventEndDate) newErrors.eventEndDate = "Event End Date is required";
+    if (!registrationStartDate)
+      newErrors.registrationStartDate = "Registration Start Date is required";
+    if (!registrationEndDate)
+      newErrors.registrationEndDate = "Registration End Date is required";
+    if (eventStartDate && eventEndDate && eventStartDate >= eventEndDate)
+      newErrors.eventEndDate = "Event End Date must be after Start Date";
+    if (
+      registrationStartDate &&
+      registrationEndDate &&
+      registrationStartDate >= registrationEndDate
+    )
+      newErrors.registrationEndDate =
+        "Registration End Date must be after Start Date";
+    if (selectedDepartments.length === 0)
+      newErrors.selectedDepartments =
+        "At least one department must be selected";
+    if (!teamSize) newErrors.teamSize = "Team Size is required";
+    if (!eventLink) newErrors.eventLink = "Event Link is required";
+    if (!eventMode) newErrors.eventMode = "Event Mode is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   useEffect(() => {
@@ -104,11 +171,9 @@ function EventUploadForm() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log("Name:", name);
-    console.log("Description:", description);
-    console.log("Event Start Date:", eventStartDate);
-    console.log("Event End Date:", eventEndDate);
-    
+    if (!validateForm()) {
+      return;
+    }
     const eventData = new FormData();
     eventData.append("name", name);
     eventData.append("description", description);
@@ -122,9 +187,7 @@ function EventUploadForm() {
     );
     eventData.append(
       "registrationStartDate",
-      registrationStartDate
-        ? registrationStartDate.toISOString().split("T")[0]
-        : ""
+      registrationStartDate ? registrationStartDate.toISOString().split("T")[0] : ""
     );
     eventData.append(
       "registrationEndDate",
@@ -137,10 +200,14 @@ function EventUploadForm() {
     eventData.append("eligibleYears", eligibleYears.join(","));
   
     // Append criteria details
-    eligibleYears.forEach((year) => {
-      eventData.append(`criteria[${year}][testTitle]`, selectedTestTitles[year] || '');
-      eventData.append(`criteria[${year}][level]`, selectedLevels[year][selectedTestTitles[year]] || '');
-    });
+    const criteria = eligibleYears.map((year) => ({
+      year,
+      testTitle: selectedTestTitles[year] || "",
+      level: selectedLevels[year] || "",
+    }));
+  
+    // Append criteria data as a JSON string
+    eventData.append("criteria", JSON.stringify(criteria));
   
     // Append files if selected
     if (eventNotice) {
@@ -149,42 +216,26 @@ function EventUploadForm() {
     if (eventImage) {
       eventData.append("eventImage", eventImage, eventImage.name);
     }
-    const entries = Array.from(eventData.entries());
-    const dataObject = Object.fromEntries(entries);
-    console.log("Event Data:", dataObject);
+  
+    // Append level count, descriptions, and rewards as JSON strings
+    eventData.append("levelCount", levelCount);
+    eventData.append("descriptions", JSON.stringify(descriptions));
+    eventData.append("rewards", JSON.stringify(rewards));
   
     axios
-      .post("http://localhost:8081/events/upload", eventData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
+      .post("http://localhost:8081/events/upload", eventData)
       .then((response) => {
-        console.log("Event created successfully:", response.data);
-        // Optionally reset the form
-        setName("");
-        setDescription("");
-        setEventStartDate(null);
-        setEventEndDate(null);
-        setRegistrationStartDate(null);
-        setRegistrationEndDate(null);
-        setSelectedDepartments([]);
-        setTeamSize("");
-        setEventLink("");
-        setEventNotice(null);
-        setEventMode("");
-        setEventImage(null);
-        setEligibleYears([]);
-        setTestTitles({});
-        setLevels({});
-        setSelectedTestTitles({});
-        setSelectedLevels({});
-        alert("Upload Successful");
+       // console.log(response.data);
+        alert("Event created successfully");
         navigate("/events");
       })
       .catch((error) => {
-        if (error.response) {
+        if(error.message==="Event name already exists"){
+          alert("Event name already exists")
+        }
+        else if (error.response) {
           console.error("Error response:", error.response);
+
         } else if (error.request) {
           console.error("Error request:", error.request);
         } else {
@@ -193,6 +244,8 @@ function EventUploadForm() {
       });
   };
   
+  
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     const validImageTypes = ["image/jpeg", "image/png", "image/jpg"];
@@ -207,59 +260,48 @@ function EventUploadForm() {
 
   return (
     <>
+     <div className="title">
+        <Link to={`/events`}>
+          <FaArrowCircleLeft size={28} color="black"/>
+        </Link>
       <h1>Upload Event Details</h1>
+      </div>
       <div className="eventUploadForm">
         <form className="uploadform" onSubmit={handleSubmit}>
           <label>
-            <p>Event Name:</p>
+          <p style={{display: "inline"}}>Event Name:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
             <input
               className="box"
               type="text"
               placeholder="Enter Event Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              required
             />
+            {errors.name && (
+              <p className="error" style={{ color: "red" }}>
+                {errors.name}
+              </p>
+            )}
           </label>
           <label>
-            <p>Event Description:</p>
+          <p style={{display: "inline"}}>Event Description:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
             <textarea
               className="para"
               placeholder="Enter Event Description with Address."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              required
             />
+            {errors.description && (
+              <p className="error" style={{ color: "red" }}>
+                {errors.description}
+              </p>
+            )}
           </label>
-          <div className="event-dates">
-            <label>
-              <p>Event Start Date:</p>
-              <DatePicker
-                className="box"
-                selected={eventStartDate}
-                onChange={(date) => setEventStartDate(date)}
-                dateFormat="yyyy-MM-dd"
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-                placeholderText="MM/DD/YYYY"
-              />
-            </label>
-            <label>
-              <p>Event End Date:</p>
-              <DatePicker
-                className="box"
-                selected={eventEndDate}
-                onChange={(date) => setEventEndDate(date)}
-                dateFormat="yyyy-MM-dd"
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-                placeholderText="MM/DD/YYYY"
-              />
-            </label>
-          </div>
           <div className="register-dates">
             <label>
-              <p>Registration Start Date:</p>
+            <p style={{display: "inline"}}>Registration Start Date: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               <DatePicker
                 className="box"
                 selected={registrationStartDate}
@@ -269,10 +311,16 @@ function EventUploadForm() {
                 showYearDropdown
                 dropdownMode="select"
                 placeholderText="MM/DD/YYYY"
+                required
               />
+              {errors.registrationStartDate && (
+                <p className="error" style={{ color: "red" }}>
+                  {errors.registrationStartDate}
+                </p>
+              )}
             </label>
             <label>
-              <p>Registration End Date:</p>
+            <p style={{display: "inline"}}>Registration End Date: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               <DatePicker
                 className="box"
                 selected={registrationEndDate}
@@ -282,76 +330,181 @@ function EventUploadForm() {
                 showYearDropdown
                 dropdownMode="select"
                 placeholderText="MM/DD/YYYY"
+                required
               />
+              {errors.registrationEndDate && (
+                <p className="error" style={{ color: "red" }}>
+                  {errors.registrationEndDate}
+                </p>
+              )}
             </label>
           </div>
+          <div className="event-dates">
+            <label>
+            <p style={{display: "inline"}}>Event Start Date: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
+              <DatePicker
+                className="box"
+                selected={eventStartDate}
+                onChange={(date) => setEventStartDate(date)}
+                dateFormat="yyyy-MM-dd"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                placeholderText="MM/DD/YYYY"
+                required
+              />
+              {errors.eventStartDate && (
+                <p className="error" style={{ color: "red" }}>
+                  {errors.eventStartDate}
+                </p>
+              )}
+            </label>
+            <label>
+            <p style={{display: "inline"}}>Event End Date: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
+              <DatePicker
+                className="box"
+                selected={eventEndDate}
+                onChange={(date) => setEventEndDate(date)}
+                dateFormat="yyyy-MM-dd"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                placeholderText="MM/DD/YYYY"
+                required
+              />
+              {errors.eventEndDate && (
+                <p className="error" style={{ color: "red" }}>
+                  {errors.eventEndDate}
+                </p>
+              )}
+            </label>
+          </div>
+        
           <label>
-            <p>Team Size:</p>
-            <select
-              value={teamSize}
-              onChange={(e) => setTeamSize(e.target.value)}
-              className={teamSize === "" ? "default-option" : ""}
-            >
-              <option value="" disabled>
-                Select a team size
-              </option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-            </select>
+          <p style={{display: "inline"}}>Team Size: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
+          <input
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={teamSize}
+                            onChange={(e) => setTeamSize(e.target.value)}
+                            required
+                        />
+                        {errors.teamSize && <p className="error" style={{ color: "red", fontSize:"13px"}}>{errors.teamSize}</p>}
           </label>
           <label>
-            <p>Event Link:</p>
+          <p style={{display: "inline"}}>Event Notice: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
             <input
               className="box"
-              type="text"
-              placeholder="Event Registration link"
-              value={eventLink}
-              onChange={(e) => setEventLink(e.target.value)}
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setEventNotice(e.target.files[0])}
+              required
             />
           </label>
           <label>
-            <p>Eligible Departments:</p>
-            {departments.map((department) => (
-              <label key={department}>
+          <p style={{display: "inline"}}>Event Image: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
+            <input
+              className="box"
+              type="file"
+              accept="image/jpeg,image/png,image/jpg"
+              onChange={handleImageChange}
+              required
+            />
+            {imageError && (
+              <p className="error" style={{ color: "red" ,fontSize:"13px"}}>
+                {imageError}
+              </p>
+            )}
+          </label>
+          <label>
+          <p style={{display: "inline"}}>Event Website Link: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
+            <input
+              className="box"
+             type="url"
+              placeholder="Enter Event Link"
+              value={eventLink}
+              onChange={(e) => setEventLink(e.target.value)}
+              required
+            />
+            {errors.eventLink && (
+              <p className="error" style={{ color: "red" ,fontSize:"13px"}}>
+                {errors.eventLink}
+              </p>
+            )}
+          </label>
+          <div className="radio-group">
+          <p style={{display: "inline"}}>Select Event Mode: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
+            <label>
+           <br></br>
+              <input
+                type="radio"
+                value="online"
+                checked={eventMode === "online"}
+                onChange={() => setEventMode("online")}
+              />
+              <span></span>
+              Online
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="offline"
+                checked={eventMode === "offline"}
+                onChange={() => setEventMode("offline")}
+              />
+              <span></span>
+              Offline
+            </label>
+            {errors.eventMode && (
+              <p className="error" style={{ color: "red",fontSize:"13px" }}>
+                {errors.eventMode}
+              </p>
+            )}
+          </div>
+          <div className="checkbox-group">
+          <p style={{display: "inline"}}>Select Departments: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
+            {departments.map((department, index) => (
+              <label key={index}>
                 <input
+                  className="checkbox1"
                   type="checkbox"
-                  value={department}
                   checked={selectedDepartments.includes(department)}
-                  onChange={(e) => {
-                    const updatedDepartments = e.target.checked
-                      ? [...selectedDepartments, department]
-                      : selectedDepartments.filter((dep) => dep !== department);
-                    setSelectedDepartments(updatedDepartments);
-                  }}
-                />
+                  onChange={() => handleCheckboxChangedept(department)}
+                />{" "}
+                <span></span>
                 {department}
               </label>
             ))}
-          </label>
+            {errors.selectedDepartments && (
+              <p className="error"  style={{ color: "red",fontSize:"13px" }}>
+                {errors.selectedDepartments}
+              </p>
+            )}
+          </div>
+
           <label>
-            <p>Eligible Years:</p>
-            {years.map((year) => (
-              <label key={year}>
-                <input
-                  type="checkbox"
-                  value={year}
-                  checked={eligibleYears.includes(year)}
-                  onChange={(e) => {
-                    const updatedYears = e.target.checked
-                      ? [...eligibleYears, year]
-                      : eligibleYears.filter((y) => y !== year);
-                    setEligibleYears(updatedYears);
-                  }}
-                />
-                {year}
-              </label>
-            ))}
+            <div className="eligible-year-group">
+            <p style={{display: "inline"}}>Eligible Years: <p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
+              {years.map((year) => (
+                <label key={year}>
+                  <input
+                    className="checkbox1"
+                    type="checkbox"
+                    value={year}
+                    checked={eligibleYears.includes(year)}
+                    onChange={(e) => {
+                      const updatedYears = e.target.checked
+                        ? [...eligibleYears, year]
+                        : eligibleYears.filter((y) => y !== year);
+                      setEligibleYears(updatedYears);
+                    }}
+                  />
+                  <span></span>
+                  {year}
+                </label>
+              ))}
+            </div>
           </label>
 
           {eligibleYears.map((year) => (
@@ -366,97 +519,93 @@ function EventUploadForm() {
                       [year]: e.target.value,
                     }))
                   }
-                  className={selectedTestTitles[year] === "" ? "default-option" : ""}
+                  className={selectedTestTitles[year] ? "default-option" : ""}
                 >
-                  <option value="" disabled>
+                  <option value="" disabled hidden>
                     Select Test Title
                   </option>
-                  {(testTitles[year] || []).map((testTitle) => (
-                    <option key={testTitle} value={testTitle}>
-                      {testTitle}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {selectedTestTitles[year] && (
-                <label>
-                  <p>Level for {selectedTestTitles[year]}:</p>
-                  <select
-                    value={
-                      (selectedLevels[year] &&
-                        selectedLevels[year][selectedTestTitles[year]]) ||
-                      ""
-                    }
-                    onChange={(e) =>
-                      setSelectedLevels((prev) => ({
-                        ...prev,
-                        [year]: {
-                          ...prev[year],
-                          [selectedTestTitles[year]]: e.target.value,
-                        },
-                      }))
-                    }
-                    className={
-                      !(
-                        selectedLevels[year] &&
-                        selectedLevels[year][selectedTestTitles[year]]
-                      )
-                        ? "default-option"
-                        : ""
-                    }
-                  >
-                    <option value="" disabled>
-                      Select Level
-                    </option>
-                    {(
-                      (levels[year] && levels[year][selectedTestTitles[year]]) ||
-                      []
-                    ).map((level) => (
-                      <option key={level} value={level}>
-                        {level}
+                  {testTitles[year] &&
+                    testTitles[year].map((testTitle) => (
+                      <option key={testTitle} value={testTitle}>
+                        {testTitle}
                       </option>
                     ))}
-                  </select>
-                </label>
+                </select>
+              </label>
+
+              {selectedTestTitles[year] && (
+                <div className="levels">
+                  <label>
+                    <p>Level for {selectedTestTitles[year]}:</p>
+                    <select
+                      value={selectedLevels[year] || ""}
+                      onChange={(e) =>
+                        setSelectedLevels((prev) => ({
+                          ...prev,
+                          [year]: e.target.value,
+                        }))
+                      }
+                      className={selectedLevels[year] ? "default-option" : ""}
+                    >
+                      <option value="" disabled hidden>
+                        Select Level
+                      </option>
+                      {levels[year] &&
+                        levels[year][selectedTestTitles[year]] &&
+                        levels[year][selectedTestTitles[year]].map((level) => (
+                          <option key={level} value={level}>
+                            {level}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                </div>
               )}
             </div>
           ))}
-           <label>
-            <p>Event Mode:</p>
-            <select
-              value={eventMode}
-              onChange={(e) => setEventMode(e.target.value)}
-              className={eventMode === "" ? "default-option" : ""}
-            >
-              <option value="" disabled>
-                Select Mode
-              </option>
-              <option value="online">Online</option>
-              <option value="offline">Offline</option>
-            </select>
-          </label>
+
           <label>
-            <p>Event Notice:</p>
+            <p>Event Level Count:</p>
             <input
               className="box"
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => setEventNotice(e.target.files[0])}
+              type="number"
+              min="1"
+              max="4"
+              value={levelCount}
+              onChange={handleLevelCountChange}
+              required
             />
           </label>
-          <label>
-            <p>Event Image:</p>
-            <input
-              className="box"
-              type="file"
-              accept="image/jpeg,image/png,image/jpg"
-              onChange={handleImageChange}
-            />
-          </label>
-          {imageError && <p className="error-message">{imageError}</p>}
+
+          {Array.from({ length: levelCount }).map((_, index) => (
+            <div key={index} className="level-details">
+              <label>
+                <p>Description for Level {index + 1}:</p>
+                <textarea
+                  className="para"
+                  type="text"
+                  placeholder={`Enter description for Level ${index + 1}`}
+                  value={descriptions[index] || ""}
+                  onChange={(e) => handleDescriptionChange(index, e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                <p>Total Reward Points for Level {index + 1}:</p>
+                <input
+                  className="box"
+                  type="text"
+                  placeholder={`Enter reward for Level ${index + 1}`}
+                  value={rewards[index] || ""}
+                  onChange={(e) => handleRewardChange(index, e.target.value)}
+                  required
+                />
+              </label>
+            </div>
+          ))}
 
           <button type="submit" className="submit-button">
-            Upload Event
+            Submit
           </button>
         </form>
       </div>

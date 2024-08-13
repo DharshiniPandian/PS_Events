@@ -1,3 +1,4 @@
+// Login.js
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -19,20 +20,21 @@ function Login() {
         axios.get('http://localhost:8081/')
             .then(res => {
                 if (res.data.valid) {
+                    setUser({ email: res.data.email, role: res.data.role });
                     navigate('/');
                 } else {
                     navigate('/login');
                 }
             })
             .catch(err => console.log(err));
-    }, [navigate]);
+    }, [navigate, setUser]);
 
     const handleSubmit = (event) => {
         event.preventDefault();
         axios.post('http://localhost:8081/login', values)
             .then(res => {
                 if (res.data.Status === "Success") {
-                    setUser({ email: values.email });
+                    setUser({ email: res.data.email, role: res.data.role });
                     navigate('/');
                 } else {
                     alert(res.data.Error);

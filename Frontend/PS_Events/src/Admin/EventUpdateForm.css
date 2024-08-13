@@ -1,3 +1,4 @@
+
 .eventUpdateForm{
     position: relative;
     background-color: white;
@@ -38,6 +39,14 @@
     border: 1px solid rgb(173, 172, 172);
     font-family: 'Roboto', sans-serif;
 }
+
+.eventUpdateForm select:focus {
+    outline: none;
+    border: 3px solid rgb(46, 131, 243);
+    outline: none;
+   
+}
+
 .eventUpdateForm .register-dates {
     display: flex;
     flex-direction: row;
@@ -236,3 +245,49 @@
     color: red;
     font-size: 14px;
 }
+.eventUpdateForm .add {
+    background-color: #007bff;
+    color: rgb(236, 236, 236);
+    padding: 10px 23px;
+    width: 15%;  
+    margin: 5px;
+    display: flex;
+    flex-direction: row;
+    /* margin-right: 58%;  */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+    align-items: center;
+}
+
+.eventUpdateForm .remove {
+    background-color: #fa2626;
+    color: white;
+    /* padding: 10px 20px; */
+    width: 15%;
+    margin: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+.eventUpdateForm .geo-tag-image{
+    border: 2px solid #ccc; 
+    border-radius: 10px; 
+    padding: 20px; 
+    margin: 20px auto; 
+    max-width: 400px; 
+    text-align: center; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    background-color: #f9f9f9; 
+}
+.eventUpdateForm .bor {
+    border: 2px solid #636363; /* Solid black border */
+    padding: 15px; /* Padding inside the border */
+    margin-bottom: 20px; /* Space between multiple bor sections */
+    border-radius: 8px; /* Rounded corners */
+    background-color: #ffffff; /* Light background color */
+  }
