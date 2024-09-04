@@ -73,8 +73,11 @@ const TeamMemberDetails = ({ formData, setFormData }) => {
     const index = parseInt(memberIndex, 10) - 1;
     if (formData.teamMembers[index]) {
       setMemberData(formData.teamMembers[index]);
+      
+      setSearchText(formData.teamMembers[index].rollNo)
     } else {
       setMemberData(initialMemberData); // Reset to initial if no data found
+      setSearchText("")
     }
   }, [memberIndex, formData.teamMembers]);
 
@@ -131,26 +134,28 @@ const TeamMemberDetails = ({ formData, setFormData }) => {
 
     setMemberData(initialMemberData);
 
+    setSearchText("")
+
     setSelectedStudents([...selectedStudents, memberData.rollNo]);
 
     const teamSize = formData.initialData.teamSize - 1; // Adjusted for team members
     const nextIndex = parseInt(memberIndex, 10) + 1;
 
     if (nextIndex <= teamSize) {
-      navigate(`/team-members/${nextIndex}`);
+      navigate(`/home/team-members/${nextIndex}`);
     } else {
-      navigate("/verify");
+      navigate("/home/verify");
     }
   };
 
   const handleBack = () => {
     const prevIndex = parseInt(memberIndex, 10) - 1;
     if (prevIndex > 0) {
-      navigate(`/team-members/${prevIndex}`);
+      navigate(`/home/team-members/${prevIndex}`);
     } else {
       const eventName = formData.initialData.eventName;
       console.log(formData);
-      navigate(`/eventregister/${eventName}`);
+      navigate(`/home/eventregister/${eventName}`);
     }
   };
 

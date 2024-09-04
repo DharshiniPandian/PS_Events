@@ -65,7 +65,7 @@ export const getEventById = (id, callback) => {
   });
 };
 export const updateEventById = (id, eventData, callback) => {
-  const departmentsString = Array.isArray(eventData.departments) ? eventData.departments.join(', ') : eventData.departments;
+  const departmentsString = Array.isArray(eventData.departments) ? eventData.departments.join(',') : eventData.departments;
 
   const eventUpdate = {
     name: eventData.name,
@@ -581,7 +581,7 @@ export const getEventRewards = (eventId, level) => {
 
 export const getTeamMembersByEvent = (eventId) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT memberId FROM team_members WHERE eventId = ?';
+    const sql = 'SELECT memberId FROM team_members WHERE eventId = ? AND active=1';
     db.query(sql, [eventId], (err, result) => {
       if (err) return reject(err);
       resolve(result);
@@ -592,7 +592,7 @@ export const getTeamMembersByEvent = (eventId) => {
 export const updateRewardPoints = (memberId, rewardPoints, level) => {
   return new Promise((resolve, reject) => {
     const column = `reward_level${level}`;
-    const sql = `UPDATE team_members SET ${column} = ? WHERE memberId = ?`;
+    const sql = `UPDATE team_members SET ${column} = ? WHERE memberId = ? AND active=1`;
     db.query(sql, [rewardPoints, memberId], (err) => {
       if (err) return reject(err);
       resolve();

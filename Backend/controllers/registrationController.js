@@ -35,7 +35,8 @@ export const createEvent = (req, res) => {
                     rollNo: initialData.rollNo,
                     year: initialData.year,
                     department: initialData.department,
-                    isTeamLeader: true
+                    isTeamLeader: true,
+                    active: true
                 };
 
                 createTeamMember(teamLeaderData, (err, teamLeaderId) => {
@@ -54,7 +55,8 @@ export const createEvent = (req, res) => {
                             rollNo: member.rollNo,
                             year: member.year,
                             department: member.department,
-                            isTeamLeader: false
+                            isTeamLeader: false,
+                            active: true
                         };
 
                         return new Promise((resolve, reject) => {

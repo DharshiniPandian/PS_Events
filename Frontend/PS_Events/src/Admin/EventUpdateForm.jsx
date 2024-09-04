@@ -21,8 +21,8 @@ const departments = [
   "Mechanical Engineering",
   "Civil Engineering",
   "Food Technology",
-  "Aeronautical Engineering",
-  "Fashion Design",
+  "Aeronotical Engineering",
+  "Fasion Design",
   "Bio Technology",
 ];
 
@@ -231,11 +231,13 @@ const EventUpdateForm = () => {
 
   const handleDateChange = (name, date) => {
     setEvent((prevEvent) => ({
-      ...prevEvent,
-      [name]: date ? new Date(date.setHours(0, 0, 0, 0)) : null,
+        ...prevEvent,
+        [name]: date ? date : prevEvent[name], // Store the date as is
     }));
-  };
+};
 
+  
+  
   const handleCheckboxChange = (field, value) => {
     setEvent((prevEvent) => {
       const fieldArray = Array.isArray(prevEvent[field])
@@ -345,67 +347,67 @@ const EventUpdateForm = () => {
     setError("");
 
     if (!validateDates()) {
-      setLoading(false);
-      return;
+        setLoading(false);
+        return;
     }
 
     // Ensure eligibleYears is an array
     const eligibleYears = Array.isArray(event.eligibleYears)
-      ? event.eligibleYears
-      : typeof event.eligibleYears === "string"
-      ? event.eligibleYears
-          .split(",")
-          .map((year) => year.trim())
-          .filter((year) => year)
-      : [];
+        ? event.eligibleYears
+        : typeof event.eligibleYears === "string"
+        ? event.eligibleYears
+              .split(",")
+              .map((year) => year.trim())
+              .filter((year) => year)
+        : [];
 
     // Convert eligibleYears to a comma-separated string
     const formattedEvent = {
-      ...event,
-      eventStartDate: event.eventStartDate
-        ? event.eventStartDate.toISOString().split("T")[0]
-        : null,
-      eventEndDate: event.eventEndDate
-        ? event.eventEndDate.toISOString().split("T")[0]
-        : null,
-      registrationStartDate: event.registrationStartDate
-        ? event.registrationStartDate.toISOString().split("T")[0]
-        : null,
-      registrationEndDate: event.registrationEndDate
-        ? event.registrationEndDate.toISOString().split("T")[0]
-        : null,
-      eligibleYears: eligibleYears
-        .join(",") // Convert array to comma-separated string
-        .toString(), // Ensure it's a string
+        ...event,
+        eventStartDate: event.eventStartDate
+            ? event.eventStartDate.toLocaleDateString('en-CA') // Format date as 'YYYY-MM-DD'
+            : null,
+        eventEndDate: event.eventEndDate
+            ? event.eventEndDate.toLocaleDateString('en-CA')
+            : null,
+        registrationStartDate: event.registrationStartDate
+            ? event.registrationStartDate.toLocaleDateString('en-CA')
+            : null,
+        registrationEndDate: event.registrationEndDate
+            ? event.registrationEndDate.toLocaleDateString('en-CA')
+            : null,
+        eligibleYears: eligibleYears.join(",").toString(),
     };
 
-    //console.log("Formatted Event Data:", formattedEvent);
-
+    // Prepare form data
     const formData = new FormData();
     formData.append("eventData", JSON.stringify(formattedEvent));
     if (eventImage) formData.append("eventImage", eventImage);
     if (eventNotice) formData.append("eventNotice", eventNotice);
 
-    // Log FormData entries for debugging
-    for (let [key, value] of formData.entries()) {
-      console.log(`FormData Entry - ${key}:`, value);
-    }
-
+    // Submit the form data
     try {
-      // Send the FormData object directly
-      await axios.put(`http://localhost:8081/events/${id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      navigate(`/details/${id}`);
+        const response = await axios.put(
+            `http://localhost:8081/events/${id}`,
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        if (response.status === 200) {
+            navigate(`/events/details/${id}`); // Redirect after successful submission
+        }
     } catch (error) {
-      console.error("Error updating event:", error);
-      setError("Failed to update event. Please try again.");
+        console.error("Error updating event:", error);
+        setError("Failed to update event.");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
+
 
   const imageUrl = event.eventImage
     ? `http://localhost:8081/${event.eventImage.replace(/\\/g, "/")}`
@@ -417,7 +419,7 @@ const EventUpdateForm = () => {
   return (
     <>
       <div className="title">
-        <Link to={`/details/${event.id}`}>
+        <Link to={`/events/details/${id}`}>
           <FaArrowCircleLeft size={28} color="black" />
         </Link>
         <h1>Update Event</h1>
@@ -826,11 +828,12 @@ const EventUpdateForm = () => {
                 return (
                   <div key={level}>
                      <div className="bor">
-                    <h4  style={{fontWeight:"500",fontSize:"20px",color:"black"}}>{level.charAt(0).toUpperCase() + level.slice(1)}</h4>
+                    <h4  style={{fontWeight:"500",fontSize:"18px",color:"black"}}>{level.charAt(0).toUpperCase() + level.slice(1)}</h4>
                   
-                    <label style={{width:"97%",marginLeft:"18px"}}>Description </label>
-                      <textarea style={{width:"97%",marginLeft:"18px"}}
+                    <label >Description </label>
+                      <textarea 
                         value={event.levelDetails[level]?.description || ""}
+                         className="para"
                         onChange={(e) =>
                           handleLevelDetailsChange(
                             level,
@@ -841,8 +844,8 @@ const EventUpdateForm = () => {
                       />
                     
                     <div>
-                    <label style={{width:"97%",marginLeft:"18px"}}>Rewards</label>
-                    <input style={{width:"97%",marginLeft:"18px"}}
+                    <label >Rewards</label>
+                    <input 
                         value={event.levelDetails[level]?.rewards || ""}
                         onChange={(e) =>
                           handleLevelDetailsChange(

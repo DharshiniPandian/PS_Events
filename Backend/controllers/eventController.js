@@ -487,9 +487,9 @@ export const approveTeam = (req, res) => {
             });
         });
 
-        if (reportResult.length === 0) {
-            return res.status(404).json({ error: 'Report not found' });
-        }
+        // if (reportResult.length === 0) {
+        //     return res.status(404).json({ error: 'Report not found' });
+        // }
 
         res.status(200).json(reportResult);
     } catch (error) {

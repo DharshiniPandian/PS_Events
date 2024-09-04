@@ -25,7 +25,7 @@ const ViewReport = ({ eventID,eventid }) => {
   const handleApproveClick = (report) => {
     setSelectedReport(report);
     assignRewards(report.level);
-    navigate(`/eventstatus/${eventid}`);
+    navigate(`/events/eventstatus/${eventid}`);
   };
 
   const assignRewards = (level) => {
@@ -55,7 +55,7 @@ const ViewReport = ({ eventID,eventid }) => {
     .then(() => {
       alert('Resubmission reason submitted successfully!');
       setShowResubmitPopup(false);
-      navigate(`/eventstatus/${eventid}`);
+      navigate(`/events/eventstatus/${eventid}`);
     })
     .catch(error => {
       console.error('There was an error submitting the resubmission reason!', error);
@@ -66,13 +66,14 @@ const ViewReport = ({ eventID,eventid }) => {
     return <div>{error}</div>;
   }
 
-  if (!Array.isArray(reports) || reports.length === 0) {
+  if (!Array.isArray(reports)) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="view-report">
-      {reports.map(report => {
+      {reports.length>0 &&
+      reports.map(report => {
         const approvalProperty = `level${report.level}Approval`;
       
         return (
@@ -88,9 +89,11 @@ const ViewReport = ({ eventID,eventid }) => {
                 <button onClick={() => handleApproveClick(report)} className="approve-button">Approve</button>
               </>
             )}
+             {report.reSubmit==1 && <h2>Document was sent to be resubmitted</h2> && <div><h2 >Reason for Resubmission:</h2><p>{report.reSubmitReason}</p></div>}
           </div>
         );
       })}
+    
 
       {showResubmitPopup && (
       <div className="overlay">

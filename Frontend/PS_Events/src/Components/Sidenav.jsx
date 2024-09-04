@@ -3,13 +3,14 @@ import './Sidenav.css';
 import { NavLink } from 'react-router-dom';
 import { MdOutlineDashboard, MdEventNote } from 'react-icons/md';
 import { HiOutlineDocumentReport } from 'react-icons/hi';
+import { TbMessage2 } from "react-icons/tb";
 import { MdLogout } from "react-icons/md";
 
 function Sidenav({ isOpen, role, handleLogout }) {
     return (
         <div className={`sidenav ${isOpen ? "" : "hide"}`}>
             <div className='link'>
-                <NavLink to="/" className={({ isActive }) => isActive ? "active" : ""}>
+                <NavLink to="/home" className={({ isActive }) => isActive ? "active" : ""}>
                     <div className="box">
                         <MdOutlineDashboard className="icon" size={24} />
                         <p>Dashboard</p>
@@ -26,6 +27,17 @@ function Sidenav({ isOpen, role, handleLogout }) {
                     </NavLink>
                 </div>
             }
+            {role === 'admin' &&
+                <div className="link">
+                    <NavLink to="/requests" className={({ isActive }) => isActive ? "active" : ""}>
+                        <div className="box">
+                           <TbMessage2 className="icon" size={24} />
+                            <p>Requests</p>
+                        </div>
+                    </NavLink>
+                </div>
+            }
+
             {role === 'student' &&
                 <div className="link">
                     <NavLink to="/registeredevents" className={({ isActive }) => isActive ? "active" : ""}>

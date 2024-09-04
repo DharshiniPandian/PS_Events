@@ -98,44 +98,50 @@ export const getCriteriaDetailsFromDb = (criteriaId, callback) => {
   });
 };
 
-
-export const getEligibleStudentsByYearAndCriteriaFromDb = (eligibleYear, criteria, departments, callback) => {
+export const getEligibleStudentsByYearAndCriteriaFromDb = (eligibleYear, criteria, departments, eventName, callback) => {
   console.log('Departments:', departments);
 
   const eligibleYearsArray = eligibleYear.split(',').map(year => parseInt(year, 10));
   const departmentsArray = departments.split(','); // assuming departments are passed as a comma-separated string
 
   let query = `
-    SELECT * 
-    FROM student 
-    WHERE yearOfStudy IN (${eligibleYearsArray.map(() => '?').join(',')}) 
-    AND department IN (${departmentsArray.map(() => '?').join(',')})
+    SELECT s.* 
+    FROM student s
+    WHERE s.yearOfStudy IN (${eligibleYearsArray.map(() => '?').join(',')}) 
+    AND s.department IN (${departmentsArray.map(() => '?').join(',')})
+    AND NOT EXISTS (
+      SELECT 1
+      FROM team_members tm
+      JOIN event_registration er ON tm.eventId = er.eventId
+      WHERE tm.rollNo = s.rollNo AND er.eventName = ?
+    )
   `;
-  const values = [...eligibleYearsArray, ...departmentsArray];
+
+  const values = [...eligibleYearsArray, ...departmentsArray, eventName];
 
   eligibleYearsArray.forEach(year => {
     switch (year) {
       case 1:
         if (criteria.year1course && criteria.year1level) {
-          query += ` AND (yearOfStudy != 1 OR (course = ? AND levelsCompleted >= ?))`;
+          query += ` AND (s.yearOfStudy != 1 OR (s.course = ? AND s.levelsCompleted >= ?))`;
           values.push(criteria.year1course, criteria.year1level);
         }
         break;
       case 2:
         if (criteria.year2course && criteria.year2level) {
-          query += ` AND (yearOfStudy != 2 OR (course = ? AND levelsCompleted >= ?))`;
+          query += ` AND (s.yearOfStudy != 2 OR (s.course = ? AND s.levelsCompleted >= ?))`;
           values.push(criteria.year2course, criteria.year2level);
         }
         break;
       case 3:
         if (criteria.year3course && criteria.year3level) {
-          query += ` AND (yearOfStudy != 3 OR (course = ? AND levelsCompleted >= ?))`;
+          query += ` AND (s.yearOfStudy != 3 OR (s.course = ? AND s.levelsCompleted >= ?))`;
           values.push(criteria.year3course, criteria.year3level);
         }
         break;
       case 4:
         if (criteria.year4course && criteria.year4level) {
-          query += ` AND (yearOfStudy != 4 OR (course = ? AND levelsCompleted >= ?))`;
+          query += ` AND (s.yearOfStudy != 4 OR (s.course = ? AND s.levelsCompleted >= ?))`;
           values.push(criteria.year4course, criteria.year4level);
         }
         break;
@@ -156,6 +162,7 @@ export const getEligibleStudentsByYearAndCriteriaFromDb = (eligibleYear, criteri
     }
   });
 };
+
 
 
 export const getRegisteredEventsFromDb = (email, callback) => {
@@ -287,7 +294,7 @@ export const createReport = (reportData, callback) => {
 
 export const getRegistrationDetailsFromDB = (email, eventName, callback) => {
   const sql = `
-    SELECT er.*
+    SELECT er.*, tm.isTeamLeader
     FROM team_members tm
     JOIN event_registration er ON tm.eventId = er.eventId
     WHERE er.eventName = ? AND tm.email = ?
@@ -448,7 +455,336 @@ export const getEventIdByTeamNameAndEventName = async (teamName, eventName) => {
   }
 };
 
-export const getTeamMembersFromDB = (eventId, callback) => {
-  const sql='SELECT * FROM team_members WHERE eventId = ?';
-  db.query(sql,[eventId],callback);
+
+export const getTeamMembersFromDB = (eventName, callback) => {
+  const sql='SELECT tm.* FROM team_members tm JOIN event_registration e ON tm.eventId = e.eventId WHERE e.eventName = ?';
+
+  db.query(sql,[eventName],callback);
 }
+
+export const getEventDetailsFromDB = (eventName, callback) => {
+  const sql = 'SELECT * FROM events WHERE name = ?';
+  db.query(sql,[eventName],callback);
+}
+
+export const  getReportDetailsByLevelFromDB = (eventName, email, level,callback) => {
+  console.log(eventName,level,email)
+  const sql = 'SELECT r.*, e.*, tm.isTeamLeader FROM report r JOIN event_registration e ON r.eventID = e.eventId JOIN team_members tm ON e.teamName = tm.teamName AND e.eventId = tm.eventId WHERE r.email = ?  AND e.eventName = ?  AND r.level = ?; '
+  db.query(sql,[ email,eventName, level],callback);
+}
+
+// models/requestsModel.js
+
+export const removeTeamMemberFromDB = (requestData, callback) => {
+  const insertRequestQuery = `
+    INSERT INTO request (eventId, action, reason, rollNo, name)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  const updateTeamMemberQuery = `
+    UPDATE team_members
+    SET active = -2
+    WHERE eventId = ? AND rollNo = ?
+  `;
+
+  const requestValues = [
+    requestData.eventId,
+    requestData.action,
+    requestData.reason,
+    requestData.rollNo,
+    requestData.name
+  ];
+
+  // Start a transaction
+  db.beginTransaction((err) => {
+    if (err) return callback(err);
+
+    // Insert the request into the request table
+    db.query(insertRequestQuery, requestValues, (err, result) => {
+      if (err) {
+        return db.rollback(() => {
+          callback(err);
+        });
+      }
+
+      // Update the active status in the team_members table
+      db.query(updateTeamMemberQuery, [requestData.eventId, requestData.rollNo], (err, result) => {
+        if (err) {
+          return db.rollback(() => {
+            callback(err);
+          });
+        }
+
+        // Commit the transaction
+        db.commit((err) => {
+          if (err) {
+            return db.rollback(() => {
+              callback(err);
+            });
+          }
+
+          // Successfully inserted and updated
+          callback(null, result);
+        });
+      });
+    });
+  });
+};
+
+
+  export const getRemovalRequestsFromDB = (eventId, callback) => {
+    const query = "SELECT rollNo FROM request WHERE action = 'delete' AND eventId = ?";
+    
+    console.log("Executing query:", query, "with eventId:", eventId);
+  
+    db.query(query, [eventId], (err, result) => {
+      if (err) {
+        console.error("Error executing query:", err);
+        return callback(err, null);
+      }
+      console.log("Query result:", result);
+      callback(null, result);
+    });
+  };
+  
+  export const fetchAllRemovalRequestsFromDB = (callback) => {
+    // Updated query to join 'request' with 'event_registration' and 'events'
+    const query = `
+      SELECT 
+        r.id,
+        r.action,
+        r.eventId,
+        r.reason,
+        r.name,
+        r.rollNo,
+        r.Approved,
+        e.eventName,
+        e.teamName,
+        e.projectTitle,
+        e.projectObjective,
+        e.existingMethodology,
+        e.proposedMethodology,
+        e.teamSize,
+        e.RegistrationApproval,
+        e.rejected,
+        e.level1Approval,
+        e.level2Approval,
+        e.level3Approval,
+        e.level4Approval,
+        e.reSubmit,
+        e.reSubmitReason,
+        ev.name,
+        ev.id
+      FROM request r
+      JOIN event_registration e ON r.eventId = e.eventId
+      JOIN events ev ON e.eventName = ev.name
+      WHERE r.Approved = 0
+    `;
+  
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return callback(err, null);
+      }
+      console.log('Database query results:', results); // Add this for debugging
+      callback(null, results);
+    });
+  };
+  
+  export const approveRemovalRequestFromDB = (eventId, rollNo, callback) => {
+    const query1 = "UPDATE team_members SET active = 0 WHERE eventId = ? AND rollNo = ?";
+  
+    db.query(query1, [eventId, rollNo], (err, result) => {
+      if (err) {
+        console.error("Error executing query:", err);
+        return callback(err, null);
+      }
+  
+      if (result.affectedRows === 0) {
+        return callback(null, result);
+      }
+  
+      const query2 = "UPDATE request SET Approved = 1 WHERE eventId = ? AND rollNo = ?";
+  
+      db.query(query2, [eventId, rollNo], (err, result) => {
+        if (err) {
+          console.error("Error executing query:", err);
+          return callback(err, null);
+        }
+  
+        const query3 = "UPDATE event_registration SET teamSize = teamSize - 1 WHERE eventId = ? AND teamSize > 0";
+  
+        db.query(query3, [eventId], (err, result) => {
+          if (err) {
+            console.error("Error executing query:", err);
+            return callback(err, null);
+          }
+  
+          console.log("Update result:", result);
+          callback(null, result);
+        });
+      });
+    });
+  };
+
+  export const fetchTeamDetails = (eventId, teamName) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT tm.*
+            FROM team_members tm
+            JOIN event_registration e ON tm.eventId = e.eventId
+            WHERE tm.eventId = ? AND tm.teamName = ?
+        `;
+        
+        db.query(query, [eventId, teamName], (error, results) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(results);
+        });
+    });
+};
+
+export const addNewTeamMember = {
+  create: (memberData) => {
+    return new Promise((resolve, reject) => {
+      const {
+        name,
+        email,
+        rollNo,
+        department,
+        year,
+        eventName, // eventName is now sent from the frontend
+      } = memberData;
+
+      const active = -1;
+      const isTeamLeader = 0;
+
+      // Set default values for reward levels
+      const reward_level1 = 0;
+      const reward_level2 = 0;
+      const reward_level3 = 0;
+      const reward_level4 = 0;
+
+      // First, retrieve the eventId using the eventName
+      const eventQuery = `
+        SELECT eventId, teamName FROM event_registration WHERE eventName = ?
+      `;
+
+      db.query(eventQuery, [eventName], (err, eventResult) => {
+        if (err) {
+          return reject(err);
+        }
+
+        // Check if the event was found
+        if (eventResult.length === 0) {
+          return reject(new Error('Event not found'));
+        }
+
+        const eventId = eventResult[0].eventId;
+
+        const teamName = eventResult[0].teamName;
+
+        // Now insert the team member
+        const insertMemberQuery = `
+          INSERT INTO team_members 
+          (name, email, rollNo, department, year, teamName, eventId, isTeamLeader, reward_level1, reward_level2, reward_level3, reward_level4, active)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.query(
+          insertMemberQuery,
+          [
+            name,
+            email,
+            rollNo,
+            department,
+            year,
+            teamName,
+            eventId,
+            isTeamLeader,
+            reward_level1,
+            reward_level2,
+            reward_level3,
+            reward_level4,
+            active
+          ],
+          (err, result) => {
+            if (err) {
+              return reject(err);
+            }
+
+            // If the team member was inserted successfully, insert the request record
+            const requestQuery = `
+              INSERT INTO request 
+              (action, eventId, reason, name, rollNo, Approved)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `;
+
+            const reason = 'New team member added'; // Customize reason as needed
+            const action = 'add';
+
+            db.query(
+              requestQuery,
+              [
+                action,
+                eventId,
+                reason,
+                name,
+                rollNo,
+                0 // Approved = 0
+              ],
+              (err, requestResult) => {
+                if (err) {
+                  return reject(err);
+                }
+
+                resolve({ memberResult: result, requestResult });
+              }
+            );
+          }
+        );
+      });
+    });
+  }
+};
+
+export const updateTeamMemberStatus = (eventId, rollNo, activeStatus) => {
+  return new Promise((resolve, reject) => {
+    const query = 'UPDATE team_members SET active = ? WHERE eventId = ? AND rollNo = ?';
+    db.query(query, [activeStatus, eventId, rollNo], (err, results) => {
+      if (err) {
+        console.error('Error updating team member status:', err);
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+// Update team size in event_registration table
+export const updateEventTeamSize = (eventId, increment) => {
+  return new Promise((resolve, reject) => {
+    const query = 'UPDATE event_registration SET teamSize = teamSize + ? WHERE eventId = ?';
+   db.query(query, [increment, eventId], (err, results) => {
+      if (err) {
+        console.error('Error updating event team size:', err);
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};
+
+// Update request status
+export const updateRequestStatus = (eventId, rollNo, action) => {
+  return new Promise((resolve, reject) => {
+    const query = 'UPDATE request SET Approved = 1 WHERE eventId = ? AND rollNo = ? AND action = ?';
+    db.query(query, [eventId, rollNo, action], (err, results) => {
+      if (err) {
+        console.error('Error updating request status:', err);
+        return reject(err);
+      }
+      resolve(results);
+    });
+  });
+};

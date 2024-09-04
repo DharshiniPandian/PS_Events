@@ -144,9 +144,9 @@ const fetchEventStatuses = async () => {
     // Determine the highest level based on qualifications
     console.log("hi",level1qualification === "Qualified for next Level",level1qualification)
     if (item.level1Approval === 1 || item.RegistrationApproval === 1) highestQualifiedLevel = 1;
-    if (level1qualification === "Qualified for next Level") highestQualifiedLevel = 2;
-    if (level2qualification === "Qualified for next Level") highestQualifiedLevel = 3;
-    if (level3qualification === "Qualified for next Level") highestQualifiedLevel = 4;
+    if (level1qualification === "Qualified for next Level" && item.level1Approval === 1) highestQualifiedLevel = 2;
+    if (level2qualification === "Qualified for next Level" && item.level2Approval === 1) highestQualifiedLevel = 3;
+    if (level3qualification === "Qualified for next Level" && item.level3Approval === 1) highestQualifiedLevel = 4;
     console.log(highestQualifiedLevel)
     // Check if the student is participating in the current level
     const isParticipating = (level) => {
@@ -401,7 +401,7 @@ const downloadExcel = async () => {
                   <td>{highlightText(getStatus(item), searchTerms.status)}</td>
                   <td>
                     <Link
-                      to={`/${eventid}/team-details/${item.eventId}/${item.teamName}/`}
+                      to={`/events/${eventid}/team-details/${item.eventId}/${item.teamName}/`}
                       className={
                         location.pathname === `/team/${item.teamName}`
                           ? "active"

@@ -29,9 +29,9 @@ const VerifyData = ({ formData }) => {
       }
 
       const result = await response.json();
-     // console.log('Registration complete:', result);
+   
       alert("Registration complete");
-      navigate('/'); 
+      navigate('/home'); 
     } catch (error) {
       console.error('Error completing registration:', error);
       setError(error.message);

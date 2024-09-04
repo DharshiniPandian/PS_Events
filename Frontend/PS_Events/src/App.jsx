@@ -23,6 +23,11 @@ import ReportSubmissionForm from './Students/ReportSubmissionForm';
 import EventStatus from './Admin/EventStatus';
 import ResubmitProject from './Students/ResubmitProject';
 import { UserProvider, UserContext } from './UserContext';
+import RegistrationDetails from './Students/RegistrationDetails';
+import ReportDetails from './Students/ReportDetails';
+import ReportResubmissionForm from './Students/ReportResubmissionForm';
+import AddExtraTeamMember from './Students/AddExtraTeamMember';
+import Requests from './Admin/Requests';
 import './App.css';
 
 function App() {
@@ -86,28 +91,33 @@ function App() {
             )}
             <div className={shouldApplyLayout ? (window.innerWidth >= 1370 ? "content" : "content-collapsed") : ""}>
                 <Routes>
-                    <Route path='/' element={<Home role={user?.role} />} />
+                    <Route path='/home' element={<Home role={user?.role} />} />
                     <Route path='/login' element={<Login />} />
 
                     <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                         <Route path='/events' element={<Events />} />
-                        <Route path="/upload" element={<EventUploadForm />} />
-                        <Route path="/details/:id" element={<EventDetails1 />} />
-                        <Route path="/update/:id" element={<EventUpdateForm />} />
-                        <Route path="/:eventid/team-details/:eventId/:teamName" element={<TeamDetails />} />
-                        <Route path="/eventstatus/:id" element={<EventStatus />} />
+                        <Route path="/events/upload" element={<EventUploadForm />} />
+                        <Route path="/events/details/:id" element={<EventDetails1 />} />
+                        <Route path="/events/update/:id" element={<EventUpdateForm />} />
+                        <Route path="/events/:eventid/team-details/:eventId/:teamName" element={<TeamDetails />} />
+                        <Route path="/events/eventstatus/:id" element={<EventStatus />} />
                         <Route path="/registration-data" element={<RegistrationData />} />
+                        <Route path="/requests" element={<Requests />} />
                     </Route>
 
                     <Route element={<ProtectedRoute allowedRoles={['student']} />}>
-                        <Route path="/events/:id" element={<EventDetails2 />} />
-                        <Route path="/eventregister/:eventName" element={<EventRegister formData={formData} setFormData={setFormData} />} />
-                        <Route path="/team-members/:memberIndex" element={<TeamMemberDetails formData={formData} setFormData={setFormData} />} />
-                        <Route path="/verify" element={<VerifyData formData={formData} />} />
-                        <Route path="/registration-status/:eventName" element={<RegistrationStatus />} />
+                        <Route path="/home/events/:id" element={<EventDetails2 />} />
+                        <Route path="/home/eventregister/:eventName" element={<EventRegister formData={formData} setFormData={setFormData} />} />
+                        <Route path="/home/team-members/:memberIndex" element={<TeamMemberDetails formData={formData} setFormData={setFormData} />} />
+                        <Route path="/home/verify" element={<VerifyData formData={formData} />} />
+                        <Route path="/registeredevents/registration-status/:eventName" element={<RegistrationStatus />} />
+                        <Route path="/registeredevents/registration-details/:eventName" element={<RegistrationDetails />} />
                         <Route path="/registeredevents" element={<RegisteredEvents />} />
-                        <Route path="/reportSubmissionForm/:eventName" element={<ReportSubmissionForm />} />
-                        <Route path="/reSubmitRegisteration/:eventName" element={<ResubmitProject />} />
+                        <Route path="/registeredevents/reportSubmissionForm/:eventName" element={<ReportSubmissionForm />} />
+                        <Route path="/registeredevents/reSubmitRegisteration/:eventName" element={<ResubmitProject />} />
+                        <Route path="/registeredevents/report-details/:eventName/:level" element={<ReportDetails />} />
+                        <Route path="/registeredevents/reportReSubmissionForm/:eventName/:level" element={<ReportResubmissionForm />} />
+                        <Route path="/registeredevents/AddExtraTeamMember/:eventName" element={<AddExtraTeamMember />} />
                     </Route>
                 </Routes>
             </div>
@@ -116,3 +126,6 @@ function App() {
 }
 
 export default App;
+
+
+

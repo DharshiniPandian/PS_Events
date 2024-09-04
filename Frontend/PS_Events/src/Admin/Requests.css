@@ -1,0 +1,45 @@
+/* Requests.css */
+.requests-container {
+    padding: 20px;
+  }
+  
+  .requests-container h2 {
+    margin-bottom: 20px;
+  }
+  
+  .requests-container  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .requests-container table, th, td {
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .requests-container th, td {
+    padding: 12px;
+    text-align: left;
+  }
+  
+  .requests-container th {
+    background-color: #f4f4f4;
+  }
+    
+  .requests-container .eye-icon {
+    vertical-align: middle;
+  }
+  
+  .requests-container .approve-button{
+    padding: 8px 12px;
+    border: none;
+    color: white;
+    width: 120px;
+    background-color: #007bff;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+ .requests-container .approve-button:hover {
+    background-color: #0056b3;
+  }

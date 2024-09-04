@@ -56,7 +56,7 @@ const EventDetails = () => {
   return (
     <div className="event-details">
       <div className="title">
-        <Link to="/">
+        <Link to="/home">
           <FaArrowCircleLeft
             size={18}
             color="black"
@@ -177,7 +177,7 @@ const EventDetails = () => {
       )}
 
       <div className="button-1">
-        <Link to={`/eventregister/${event.name}`}>
+        <Link to={`/home/eventregister/${event.name}`}>
           <button>Register</button>
         </Link>
       </div>

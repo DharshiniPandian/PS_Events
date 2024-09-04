@@ -42,7 +42,7 @@ function Students() {
     }, [user]);
 
     const handleEventClick = (id) => {
-        navigate(`/events/${id}`); 
+        navigate(`/home/events/${id}`); 
     };
 
     if (loading) return <p>Loading...</p>;

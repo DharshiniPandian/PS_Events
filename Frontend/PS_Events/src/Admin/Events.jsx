@@ -31,7 +31,7 @@ const Events = () => {
             <h1>Event Upload</h1>
             <br></br>
             <div className="header-container">
-            <Link to="/upload">
+            <Link to="/events/upload">
                 <button className='navigate-button'>+  Create Event</button>
                 {/* <CiCirclePlus className="circle-icon"/> */}
             </Link>
@@ -50,7 +50,7 @@ const Events = () => {
                 {/* {events.map(event => (  */}
             {filteredEvents.map(event => (
                     <div key={event.id} className="event-card">
-                        <Link to={`/eventstatus/${event.id}`}>
+                        <Link to={`/events/eventstatus/${event.id}`}>
                             {event.eventImage && (
                                 <img
                                     src={`http://localhost:8081/${event.eventImage.replace(/\\/g, '/')}`}

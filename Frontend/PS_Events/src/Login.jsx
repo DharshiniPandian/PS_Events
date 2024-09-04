@@ -21,7 +21,7 @@ function Login() {
             .then(res => {
                 if (res.data.valid) {
                     setUser({ email: res.data.email, role: res.data.role });
-                    navigate('/');
+                    navigate('/home');
                 } else {
                     navigate('/login');
                 }
@@ -35,7 +35,7 @@ function Login() {
             .then(res => {
                 if (res.data.Status === "Success") {
                     setUser({ email: res.data.email, role: res.data.role });
-                    navigate('/');
+                    navigate('/home');
                 } else {
                     alert(res.data.Error);
                 }

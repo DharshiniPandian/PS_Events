@@ -105,16 +105,16 @@ const EventRegister = ({ formData, setFormData }) => {
   
     // Navigate based on teamSize
     if (localFormData.teamSize === '1') {
-      navigate('/verify');
+      navigate('/home/verify');
     } else {
-      navigate('/team-members/1');
+      navigate('/home/team-members/1');
     }
   };
   
   return (
     <>
       <div className='title'>
-        <Link to="/">
+        <Link to="/home">
           <FaArrowCircleLeft size={18} color="black" aria-label="Back to events" />
         </Link>
         <h2>Project Team Registration Form</h2>
@@ -209,7 +209,6 @@ const EventRegister = ({ formData, setFormData }) => {
                 <p>Team size:<p style={{color:"red" ,fontSize:"15px",display: "inline"}}>*</p></p>
               </label>
               <input
-                type="number"
                 id="teamSize"
                 name="teamSize"
                 value={localFormData.teamSize || ''}

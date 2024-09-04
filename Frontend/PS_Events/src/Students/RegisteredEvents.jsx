@@ -84,7 +84,7 @@ const RegisteredEvents = () => {
   }, [user.email]);
 
   const handleCardClick = (eventName) => {
-    navigate(`/registration-status/${eventName}`); // Use navigate for redirection
+    navigate(`/registeredevents/registration-status/${eventName}`); // Use navigate for redirection
   };
 
   return (

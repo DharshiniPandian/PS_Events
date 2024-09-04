@@ -5,6 +5,10 @@
     font-weight: 500;
 }
 
+.event h1{
+    font-size: 27px;
+}
+
 .event-cards {
     display: flex;
     flex-wrap: wrap;

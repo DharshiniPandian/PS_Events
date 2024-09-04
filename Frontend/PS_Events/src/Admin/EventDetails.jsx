@@ -51,10 +51,10 @@ const EventDetails = () => {
   return (
     <>
       <div className="title">
-        <Link to={`/eventstatus/${event.id}`}>
-          <FaArrowCircleLeft size={28} color="black" />
+        <Link to={`/events/eventstatus/${event.id}`}>
+          <FaArrowCircleLeft size={24} color="black" />
         </Link>
-        <h1>Event Details</h1>
+        <h2>Event Details</h2>
       </div>
       <div className="event-details">
         <div className="tit">
@@ -192,6 +192,8 @@ const EventDetails = () => {
           </div>
         </div>
 
+        <div className="event-data1">
+
         {imageUrl && (
           <>
             <h3 style={{ color: "black" }}>Event Image:</h3>
@@ -210,9 +212,10 @@ const EventDetails = () => {
             )}
           </>
         )}
+        </div>
 
         <div className="button-1">
-          <Link to={`/update/${id}`}>
+          <Link to={`/events/update/${id}`}>
             <button>Update</button>
           </Link>
         </div>

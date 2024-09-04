@@ -64,7 +64,8 @@
   outline: none;
 }
 .eventRegister input:focus,
-.eventRegister select:focus {
+.eventRegister select:focus,
+.eventRegister textarea:focus {
   border: 3px solid rgb(46, 131, 243);
   outline: none;
 }

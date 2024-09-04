@@ -62,7 +62,7 @@ const TeamDetails = () => {
       );
 
       alert("Team approved successfully!");
-      navigate(`/eventstatus/${eventid}`);
+      navigate(`/events/eventstatus/${eventid}`);
     } catch (error) {
       console.error("Error approving team:", error);
     } finally {
@@ -77,7 +77,7 @@ const TeamDetails = () => {
         { rejectionReason }
       );
       alert("Team rejected successfully!");
-      navigate(`/eventstatus/${eventid}`);
+      navigate(`/events/eventstatus/${eventid}`);
     } catch (error) {
       console.error("Error rejecting team:", error);
     } finally {
@@ -92,7 +92,7 @@ const TeamDetails = () => {
         { reSubmitReason }
       );
       alert("Request for ReSubmission is successfully!");
-      navigate(`/eventstatus/${eventid}`);
+      navigate(`/events/eventstatus/${eventid}`);
     } catch (error) {
       console.error("Error in asking for resubmission team:", error);
     } finally {
@@ -110,7 +110,7 @@ const TeamDetails = () => {
     <>
       <div className="team-detailss">
         <div className="title">
-          <Link to={`/eventstatus/${eventid}`} className="back-link">
+          <Link to={`/events/eventstatus/${eventid}`} className="back-link">
             <FaArrowCircleLeft size={28} color="black" />
           </Link>
           <h1>Team: {team.teamName}</h1>
@@ -228,7 +228,6 @@ const TeamDetails = () => {
             Reject
           </button>
         )}
-        {team.reSubmit==1 && <h2>Document was sent to be resubmitted</h2> && <div><h2 >Reason for Resubmission:</h2><p>{team.reSubmitReason}</p></div>}
     
         {team.RegistrationApproval  === 1 && <ViewReport eventID={no}  eventid={no1} />}
        

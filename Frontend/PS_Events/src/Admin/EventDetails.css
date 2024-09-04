@@ -7,20 +7,20 @@
 }
 .event-details {
     position: relative;
-    background-color: rgb(252, 251, 251);
+    background-color: white;
+    /* background-color: rgb(252, 251, 251); */
     /* box-shadow: 0px 0px 19px 1px rgb(177, 177, 177); */
     justify-content: center;
     align-items: center;
     width: 100%;
-    max-width: 900px;
+    max-width: 1050px;
     /* margin: 0 auto; */
     padding: 46px;
     border-radius: 10px;
     border: 1px solid rgb(182, 182, 182);
 
     margin-top: 2%;
-    width: 100%;
-    max-width: 1000px;
+
     font-family: 'Roboto', sans-serif;
    
 }
@@ -30,6 +30,7 @@
 .event-details h3 {
     font-family: 'Roboto', sans-serif;
     font-weight: 400;
+    font-size: 17px;
     color: rgb(71, 71, 71);
   }
 .event-details .button-1{
@@ -51,8 +52,7 @@
     margin-top: 20px;
     font-family: 'Roboto', sans-serif; 
     font-weight: 500;
-    
-    
+  
 }
 
 .event-details .title {
@@ -136,19 +136,18 @@
   .event-data{
     position: relative;
     background-color: rgb(255, 255, 255);
-    box-shadow: 0px 0px 19px 1px rgb(243, 243, 243);
+    /* box-shadow: 0px 0px 15px 1px rgb(228, 225, 225); */
     justify-content: center;
     align-items: center;
     width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
     padding: 10px;
     border-radius: 10px;
-    border: 1px solid rgb(182, 182, 182);
-    margin-left: -10px;
+    /* border: 1px solid rgb(182, 182, 182); */
     font-family: 'Roboto', sans-serif;
   }
+
   .year-course-container {
+    margin-left: 30px;
     display: grid;
     grid-template-columns: auto 1fr; 
     column-gap: 20px; 
@@ -158,7 +157,8 @@
   .cri-container {
     display: flex;
     flex-direction: column;
-    /* gap: 10px;  */
+    gap: 6px; 
+    margin-top: 8px;
   }
   
   .course-container {
@@ -204,4 +204,15 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
+  }
+
+  .event-data1{
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    padding: 10PX;
+    font-family: 'Roboto', sans-serif;
   }

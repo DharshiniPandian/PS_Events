@@ -172,7 +172,9 @@
     padding: 20px; 
     margin: 20px auto; 
     max-width: 400px; 
+    display: flex;
     text-align: center; 
+    flex-direction: column;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
     background-color: #f9f9f9; 
 }

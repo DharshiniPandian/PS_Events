@@ -31,9 +31,9 @@ const EventStatus= () => {
     <div className='event'>
     <div className="title">
     <Link to={`/events`} className="back-link">
-          <FaArrowCircleLeft size={28} color="black" />
+          <FaArrowCircleLeft size={24} color="black" />
         </Link>
-    <h1>Event Status</h1>
+    <h2>Event Status</h2>
     </div>
     <div className='event-status-container'>
         <div className='team-details'>
@@ -55,7 +55,7 @@ const EventStatus= () => {
                             )}
                              <div className='course-container'>
                             <h2 className="event-text">{events.name} <div className="icon-container">
-                                <Link to={`/details/${events.id}`}>
+                                <Link to={`/events/details/${events.id}`}>
                                     <LuEye size={23} color="blue" className="eye-icon" />
                                 </Link>
                                 {/* <FaPen size={18} color="black" className="pen-icon" /> */}

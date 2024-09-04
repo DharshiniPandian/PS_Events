@@ -15,6 +15,7 @@ const ResubmitProject = () => {
     proposedMethodology: ''
   });
   const navigate = useNavigate();
+  const [data,setData]=useState(null);
   console.log(eventName);
   console.log(user.email);
 
@@ -22,8 +23,8 @@ const ResubmitProject = () => {
     if (user && user.email && eventName) {
       axios.get(`http://localhost:8081/student/registration-details/${user.email}/${eventName}`)
         .then(response => {
-          //console.log('Fetched project data:', response.data);
-          
+          console.log('Fetched project data:', response.data);
+          setData(response.data)
           // Ensure response.data matches the shape of projectData
           setProjectData({
             projectTitle: response.data[0].projectTitle || '',
@@ -50,8 +51,8 @@ const ResubmitProject = () => {
     e.preventDefault();
     axios.put(`http://localhost:8081/student/new-registration-details/${user.email}/${eventName}`, projectData)
       .then(response => {
-        //console.log('Project data updated:', response.data);
-        navigate(`/registration-status/${eventName}`); 
+        console.log('Project data updated:', response.data);
+        navigate(`/registeredevents/registration-details/${eventName}`); 
       })
       .catch(error => {
         console.error('Error updating project data:', error);
@@ -61,7 +62,7 @@ const ResubmitProject = () => {
   return (
     <>
       <div className='title'>
-        <Link to="/">
+        <Link to={`/registeredevents/registration-details/${eventName}`}>
           <FaArrowCircleLeft size={18} color="black" aria-label="Back to events" />
         </Link>
         <h2>Resubmit Project Details</h2>
