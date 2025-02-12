@@ -13,8 +13,8 @@ const VerifyData = ({ formData }) => {
 
   const handleFinalSubmit = async () => {
     try {
-     // console.log('Sending data:', formData); 
-
+   
+      console.log('Sending data:', formData); 
       const response = await fetch('http://localhost:8081/register/team-details', {
         method: 'POST',
         headers: {

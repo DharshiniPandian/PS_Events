@@ -115,7 +115,7 @@ function App() {
                         <Route path="/registeredevents" element={<RegisteredEvents />} />
                         <Route path="/registeredevents/reportSubmissionForm/:eventName" element={<ReportSubmissionForm />} />
                         <Route path="/registeredevents/reSubmitRegisteration/:eventName" element={<ResubmitProject />} />
-                        <Route path="/registeredevents/report-details/:eventName/:level" element={<ReportDetails />} />
+                        <Route path="/registeredevents/report-details/:eventName/:email/:level" element={<ReportDetails />} />
                         <Route path="/registeredevents/reportReSubmissionForm/:eventName/:level" element={<ReportResubmissionForm />} />
                         <Route path="/registeredevents/AddExtraTeamMember/:eventName" element={<AddExtraTeamMember />} />
                     </Route>

@@ -197,7 +197,9 @@ const RegistrationStatus = () => {
       setShowReason(true);
     }
   };
-  //  console.log("hi", status);
+
+  const leaders = teamdetails && teamdetails.filter(member => member.isTeamLeader);   
+  // console.log("leader", leaders[0]?.email)
 
   const updateLevelStatus = (data, reports, eventData) => {
     const level1Report = reports.find((report) => report.level === 1);
@@ -705,7 +707,7 @@ const RegistrationStatus = () => {
                         level1Status !== "Report to be submitted" && (
                           <td>
                             <Link
-                              to={`/registeredevents/report-details/${registrationData.eventName}/1`}
+                              to={`/registeredevents/report-details/${registrationData.eventName}/${leaders && leaders[0]?.email}/1`}
                             >
                               <LuEye
                                 size={23}
@@ -766,7 +768,7 @@ const RegistrationStatus = () => {
                         level2Status !== "Report to be submitted" && (
                           <td>
                             <Link
-                              to={`/registeredevents/report-details/${registrationData.eventName}/2`}
+                              to={`/registeredevents/report-details/${registrationData.eventName}/${leaders && leaders[0]?.email}/2`}
                             >
                               <LuEye
                                 size={23}
@@ -826,7 +828,7 @@ const RegistrationStatus = () => {
                         level3Status !== "Report to be submitted" && (
                           <td>
                             <Link
-                              to={`/registeredevents/report-details/${registrationData.eventName}/3`}
+                              to={`/registeredevents/report-details/${registrationData.eventName}/${leaders && leaders[0]?.email}/3`}
                             >
                               <LuEye
                                 size={23}
@@ -893,7 +895,7 @@ const RegistrationStatus = () => {
                         level4Status !== "Report to be submitted" && (
                           <td>
                             <Link
-                              to={`/registeredevents/report-details/${registrationData.eventName}/4`}
+                              to={`/registeredevents/report-details/${registrationData.eventName}/${leaders && leaders[0]?.email}/4`}
                             >
                               <LuEye
                                 size={23}
